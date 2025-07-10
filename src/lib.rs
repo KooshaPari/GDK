@@ -161,12 +161,12 @@ pub struct RevertMetadata {
 
 #[async_trait::async_trait(?Send)]
 pub trait GitWorkflow {
-    async fn create_commit_node(&mut self, message: &str) -> Result<CommitNode>;
-    async fn create_revert_point(&mut self, reason: &str) -> Result<RevertPoint>;
-    async fn revert_to_point(&mut self, point: &RevertPoint) -> Result<()>;
-    async fn analyze_convergence(&self) -> Result<ConvergenceMetrics>;
-    async fn update_thread_colors(&mut self) -> Result<()>;
-    async fn validate_ci_cd(&self, commit_hash: &str) -> Result<bool>;
+    async fn create_commit_node(&mut self, message: &str) -> GdkResult<CommitNode>;
+    async fn create_revert_point(&mut self, reason: &str) -> GdkResult<RevertPoint>;
+    async fn revert_to_point(&mut self, point: &RevertPoint) -> GdkResult<()>;
+    async fn analyze_convergence(&self) -> GdkResult<ConvergenceMetrics>;
+    async fn update_thread_colors(&mut self) -> GdkResult<()>;
+    async fn validate_ci_cd(&self, commit_hash: &str) -> GdkResult<bool>;
 }
 
 impl fmt::Display for ThreadColor {

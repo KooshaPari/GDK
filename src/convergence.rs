@@ -34,8 +34,7 @@
 //! }
 //! ```
 
-use crate::{CommitNode, ThreadColor, GdkError, GdkResult};
-use anyhow::anyhow;
+use crate::{CommitNode, ThreadColor, GdkResult, GdkError};
 use serde::{Deserialize, Serialize};
 
 /// Mathematical analyzer for detecting workflow convergence
@@ -227,7 +226,7 @@ impl ConvergenceAnalyzer {
     fn calculate_convergence_factors(
         &self,
         commit_history: &[CommitNode],
-    ) -> Result<ConvergenceFactors> {
+    ) -> GdkResult<ConvergenceFactors> {
         let quality_stability = self.calculate_quality_stability(commit_history)?;
         let thread_health_ratio = self.calculate_thread_health_ratio(commit_history)?;
         let test_pass_consistency = self.calculate_test_pass_consistency(commit_history)?;
@@ -243,7 +242,7 @@ impl ConvergenceAnalyzer {
         })
     }
 
-    fn calculate_quality_stability(&self, commit_history: &[CommitNode]) -> Result<f64> {
+    fn calculate_quality_stability(&self, commit_history: &[CommitNode]) -> GdkResult<f64> {
         let recent_commits: Vec<&CommitNode> = commit_history
             .iter()
             .rev()
@@ -276,10 +275,14 @@ impl ConvergenceAnalyzer {
         Ok(stability)
     }
 
-    fn calculate_thread_health_ratio(&self, commit_history: &[CommitNode]) -> Result<f64> {
+    fn calculate_thread_health_ratio(&self, commit_history: &[CommitNode]) -> GdkResult<f64> {
         let latest_commit = commit_history
             .last()
-            .ok_or_else(|| anyhow!("No commits available"))?;
+            .ok_or_else(|| GdkError::validation_error(
+                "no_commits",
+                "No commits available for thread health analysis".to_string(),
+                "Commit history is empty".to_string(),
+            ))?;
 
         let total_threads = latest_commit.file_threads.len();
         if total_threads == 0 {
@@ -306,7 +309,7 @@ impl ConvergenceAnalyzer {
         }
     }
 
-    fn calculate_test_pass_consistency(&self, commit_history: &[CommitNode]) -> Result<f64> {
+    fn calculate_test_pass_consistency(&self, commit_history: &[CommitNode]) -> GdkResult<f64> {
         let recent_commits: Vec<&CommitNode> = commit_history
             .iter()
             .rev()
@@ -330,7 +333,7 @@ impl ConvergenceAnalyzer {
         Ok(high_pass_rate_count as f64 / pass_rates.len() as f64)
     }
 
-    fn calculate_build_success_rate(&self, commit_history: &[CommitNode]) -> Result<f64> {
+    fn calculate_build_success_rate(&self, commit_history: &[CommitNode]) -> GdkResult<f64> {
         let recent_commits: Vec<&CommitNode> = commit_history
             .iter()
             .rev()
@@ -358,7 +361,7 @@ impl ConvergenceAnalyzer {
         }
     }
 
-    fn calculate_trend_improvement(&self, commit_history: &[CommitNode]) -> Result<f64> {
+    fn calculate_trend_improvement(&self, commit_history: &[CommitNode]) -> GdkResult<f64> {
         let trend_commits: Vec<&CommitNode> = commit_history
             .iter()
             .rev()
@@ -484,7 +487,7 @@ impl ConvergenceAnalyzer {
         recommendations
     }
 
-    pub fn predict_convergence_time(&self, commit_history: &[CommitNode]) -> Result<Option<u32>> {
+    pub fn predict_convergence_time(&self, commit_history: &[CommitNode]) -> GdkResult<Option<u32>> {
         if commit_history.len() < 3 {
             return Ok(None);
         }

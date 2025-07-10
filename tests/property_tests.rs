@@ -339,7 +339,7 @@ proptest! {
         };
         let metrics_json = serde_json::to_string(&metrics).unwrap();
         let metrics_deserialized: ThreadMetrics = serde_json::from_str(&metrics_json).unwrap();
-        prop_assert_eq!(metrics, metrics_deserialized);
+        prop_assert_eq!(metrics, metrics_deserialized.clone());
         
         // Verify numerical precision is preserved
         prop_assert!((metrics.complexity_delta - metrics_deserialized.complexity_delta).abs() < 1e-10);

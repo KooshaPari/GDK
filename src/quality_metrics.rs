@@ -18,7 +18,7 @@
 //! - **Reliability**: Error handling, edge case coverage
 //! - **Usability**: API design, documentation quality
 
-use crate::{CommitNode, FileThread, ThreadColor, GdkResult, GdkError};
+use crate::{CommitNode, GdkResult, GdkError};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
 use std::time::{SystemTime, UNIX_EPOCH};

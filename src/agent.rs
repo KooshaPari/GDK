@@ -30,7 +30,6 @@
 //! ```
 
 use crate::{CommitNode, ConvergenceMetrics, GitWorkflow, RevertPoint, GdkError, GdkResult};
-use anyhow::anyhow;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -450,9 +449,10 @@ impl<T: GitWorkflow> AgentWorkflowController<T> {
                 .await?;
             self.complete_action(&action, false, Some(&commit_node.hash))
                 .await?;
-            return Err(anyhow!(
-                "CI/CD validation failed for commit {}",
-                commit_node.hash
+            return Err(GdkError::validation_error(
+                "ci_cd_validation",
+                format!("CI/CD validation failed for commit {}", commit_node.hash),
+                "Build or test failures detected".to_string(),
             ));
         }
 
@@ -468,7 +468,7 @@ impl<T: GitWorkflow> AgentWorkflowController<T> {
         Ok(commit_node)
     }
 
-    pub async fn get_convergence_status(&mut self, agent_id: &str) -> Result<ConvergenceMetrics> {
+    pub async fn get_convergence_status(&mut self, agent_id: &str) -> GdkResult<ConvergenceMetrics> {
         let action = self
             .log_action(agent_id, ActionType::ConvergenceCheck)
             .await?;
@@ -484,7 +484,7 @@ impl<T: GitWorkflow> AgentWorkflowController<T> {
         Ok(convergence)
     }
 
-    pub async fn suggest_next_action(&self, agent_id: &str) -> Result<String> {
+    pub async fn suggest_next_action(&self, agent_id: &str) -> GdkResult<String> {
         let session = self.get_session(agent_id)?;
 
         if let Some(latest_convergence) = session.convergence_history.last() {
@@ -510,19 +510,29 @@ impl<T: GitWorkflow> AgentWorkflowController<T> {
         Ok("CONTINUE: Execute next iteration of infinite monkey workflow".to_string())
     }
 
-    fn get_session(&self, agent_id: &str) -> Result<&AgentSession> {
+    fn get_session(&self, agent_id: &str) -> GdkResult<&AgentSession> {
         self.active_sessions
             .get(agent_id)
-            .ok_or_else(|| anyhow!("No active session for agent {}", agent_id))
+            .ok_or_else(|| GdkError::agent_error(
+                agent_id,
+                "session_lookup",
+                None,
+                format!("No active session for agent {}", agent_id),
+            ))
     }
 
-    fn get_session_mut(&mut self, agent_id: &str) -> Result<&mut AgentSession> {
+    fn get_session_mut(&mut self, agent_id: &str) -> GdkResult<&mut AgentSession> {
         self.active_sessions
             .get_mut(agent_id)
-            .ok_or_else(|| anyhow!("No active session for agent {}", agent_id))
+            .ok_or_else(|| GdkError::agent_error(
+                agent_id,
+                "session_lookup",
+                None,
+                format!("No active session for agent {}", agent_id),
+            ))
     }
 
-    async fn log_action(&mut self, agent_id: &str, action_type: ActionType) -> Result<AgentAction> {
+    async fn log_action(&mut self, agent_id: &str, action_type: ActionType) -> GdkResult<AgentAction> {
         let session = self.get_session(agent_id)?;
 
         let action = AgentAction {
@@ -544,7 +554,7 @@ impl<T: GitWorkflow> AgentWorkflowController<T> {
         action: &AgentAction,
         success: bool,
         commit_after: Option<&str>,
-    ) -> Result<()> {
+    ) -> GdkResult<()> {
         let completed_action = AgentAction {
             action_id: action.action_id,
             agent_id: action.agent_id.clone(),
@@ -560,7 +570,7 @@ impl<T: GitWorkflow> AgentWorkflowController<T> {
         Ok(())
     }
 
-    pub fn get_agent_statistics(&self, agent_id: &str) -> Result<AgentStatistics> {
+    pub fn get_agent_statistics(&self, agent_id: &str) -> GdkResult<AgentStatistics> {
         let session = self.get_session(agent_id)?;
         let agent_actions: Vec<_> = self
             .action_history

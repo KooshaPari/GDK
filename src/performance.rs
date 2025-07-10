@@ -121,12 +121,12 @@ struct BatchProcessor {
 
 /// Thread update operation for batching
 #[derive(Debug, Clone)]
-struct ThreadUpdate {
-    file_path: String,
-    lint_score: f64,
-    type_check_score: f64,
-    test_coverage: f64,
-    functionality_score: f64,
+pub struct ThreadUpdate {
+    pub file_path: String,
+    pub lint_score: f64,
+    pub type_check_score: f64,
+    pub test_coverage: f64,
+    pub functionality_score: f64,
 }
 
 impl ParallelCommitProcessor {
@@ -188,7 +188,7 @@ impl ParallelCommitProcessor {
                         .enumerate()
                         .map(|(item_idx, commit)| {
                             // Check cache first
-                            let cache_key = format!("{}:{}", chunk_idx, item_idx);
+                            let _cache_key = format!("{}:{}", chunk_idx, item_idx);
                             
                             // Process with error handling
                             processor_fn(commit)
@@ -384,7 +384,7 @@ impl ConcurrentThreadManager {
         if let Some(cached) = self.quality_cache.get(file_path) {
             // Validate cache (expire after 60 seconds)
             if cached.timestamp.elapsed() < std::time::Duration::from_secs(60) {
-                return Some(cached.color);
+                return Some(cached.color.clone());
             }
         }
 

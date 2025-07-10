@@ -270,6 +270,20 @@ impl<T> GdkResultExt<T> for Result<T, std::io::Error> {
     }
 }
 
+/// Implement conversion from tokio::task::JoinError
+impl From<tokio::task::JoinError> for GdkError {
+    fn from(err: tokio::task::JoinError) -> Self {
+        GdkError::ValidationError {
+            rule: "task_join".to_string(),
+            context: "Async task failed to join".to_string(),
+            source: Box::new(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                err.to_string(),
+            )),
+        }
+    }
+}
+
 /// Implement conversion from anyhow::Error for compatibility
 impl From<anyhow::Error> for GdkError {
     fn from(err: anyhow::Error) -> Self {
@@ -280,6 +294,27 @@ impl From<anyhow::Error> for GdkError {
                 std::io::ErrorKind::Other,
                 err.to_string(),
             )),
+        }
+    }
+}
+
+/// Implement conversion from git2::Error
+impl From<git2::Error> for GdkError {
+    fn from(err: git2::Error) -> Self {
+        GdkError::GitError {
+            operation: "git_operation".to_string(),
+            source: err,
+        }
+    }
+}
+
+/// Implement conversion from std::io::Error
+impl From<std::io::Error> for GdkError {
+    fn from(err: std::io::Error) -> Self {
+        GdkError::FileSystemError {
+            path: "unknown".to_string(),
+            message: "IO operation failed".to_string(),
+            source: err,
         }
     }
 }

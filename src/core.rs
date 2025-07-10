@@ -11,7 +11,7 @@ use crate::{
     CommitNode, ConvergenceMetrics, FileThread, GitWorkflow, RevertPoint, ThreadColor,
     ThreadMetrics, ThreadState, GdkError, GdkResult, GdkResultExt,
 };
-use anyhow::{anyhow, Context};
+use anyhow::anyhow;
 use git2::{Repository, Signature};
 use std::collections::HashMap;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -154,7 +154,7 @@ impl GitWorkflowManager {
         ))
     }
 
-    pub async fn create_spiral_branch(&mut self, base_commit: &str) -> Result<String> {
+    pub async fn create_spiral_branch(&mut self, base_commit: &str) -> GdkResult<String> {
         let uuid_str = Uuid::new_v4().to_string();
         let spiral_branch_name = format!("spiral-{}", &uuid_str[..8]);
 
@@ -175,7 +175,7 @@ impl GitWorkflowManager {
         Ok(spiral_branch_name)
     }
 
-    async fn run_quality_checks(&self, file_path: &str) -> Result<(f64, f64, f64, f64)> {
+    async fn run_quality_checks(&self, file_path: &str) -> GdkResult<(f64, f64, f64, f64)> {
         let lint_score = self.run_lint_check(file_path).await.unwrap_or(0.0);
         let type_check_score = self.run_type_check(file_path).await.unwrap_or(0.0);
         let test_coverage = self.get_test_coverage(file_path).await.unwrap_or(0.0);
@@ -189,7 +189,7 @@ impl GitWorkflowManager {
         ))
     }
 
-    async fn run_lint_check(&self, _file_path: &str) -> Result<f64> {
+    async fn run_lint_check(&self, _file_path: &str) -> GdkResult<f64> {
         let output = Command::new("cargo")
             .args(["clippy", "--", "-D", "warnings"])
             .current_dir(&self.repo_path)
@@ -208,7 +208,7 @@ impl GitWorkflowManager {
         }
     }
 
-    async fn run_type_check(&self, _file_path: &str) -> Result<f64> {
+    async fn run_type_check(&self, _file_path: &str) -> GdkResult<f64> {
         let output = Command::new("cargo")
             .args(["check"])
             .current_dir(&self.repo_path)
@@ -218,7 +218,7 @@ impl GitWorkflowManager {
         Ok(if output.status.success() { 1.0 } else { 0.0 })
     }
 
-    async fn get_test_coverage(&self, _file_path: &str) -> Result<f64> {
+    async fn get_test_coverage(&self, _file_path: &str) -> GdkResult<f64> {
         let output = Command::new("cargo")
             .args(["test"])
             .current_dir(&self.repo_path)
@@ -244,7 +244,7 @@ impl GitWorkflowManager {
         Ok(0.5)
     }
 
-    async fn assess_functionality(&self, file_path: &str) -> Result<f64> {
+    async fn assess_functionality(&self, file_path: &str) -> GdkResult<f64> {
         let content = tokio::fs::read_to_string(file_path).await?;
 
         let lines = content.lines().count() as f64;
@@ -260,7 +260,7 @@ impl GitWorkflowManager {
         Ok((density * 0.7 + documentation_ratio * 0.3).min(1.0))
     }
 
-    pub async fn get_current_commit_hash(&self) -> Result<String> {
+    pub async fn get_current_commit_hash(&self) -> GdkResult<String> {
         let head = self.repo.head()?;
         let commit = head.peel_to_commit()?;
         Ok(commit.id().to_string())
@@ -269,7 +269,7 @@ impl GitWorkflowManager {
 
 #[async_trait::async_trait(?Send)]
 impl GitWorkflow for GitWorkflowManager {
-    async fn create_commit_node(&mut self, message: &str) -> Result<CommitNode> {
+    async fn create_commit_node(&mut self, message: &str) -> GdkResult<CommitNode> {
         // Perform all git operations synchronously first
         let (commit_hash, parent_hashes) = {
             let mut index = self.repo.index()?;
@@ -317,7 +317,7 @@ impl GitWorkflow for GitWorkflowManager {
                 ThreadColor::from_scores(lint, type_check, test_coverage, functionality);
 
             let thread = FileThread {
-                file_path: file_path.to_string(),
+                file_path: file_path.clone(),
                 thread_id: Uuid::new_v4(),
                 color_status,
                 lint_score: lint,
@@ -363,7 +363,7 @@ impl GitWorkflow for GitWorkflowManager {
         Ok(commit_node)
     }
 
-    async fn create_revert_point(&mut self, reason: &str) -> Result<RevertPoint> {
+    async fn create_revert_point(&mut self, reason: &str) -> GdkResult<RevertPoint> {
         let commit_hash = {
             let head = self.repo.head()?;
             let commit = head.peel_to_commit()?;
@@ -386,7 +386,7 @@ impl GitWorkflow for GitWorkflowManager {
         })
     }
 
-    async fn revert_to_point(&mut self, point: &RevertPoint) -> Result<()> {
+    async fn revert_to_point(&mut self, point: &RevertPoint) -> GdkResult<()> {
         let commit_oid = git2::Oid::from_str(&point.commit_hash)?;
         let commit = self.repo.find_commit(commit_oid)?;
 
@@ -402,7 +402,7 @@ impl GitWorkflow for GitWorkflowManager {
         Ok(())
     }
 
-    async fn analyze_convergence(&self) -> Result<ConvergenceMetrics> {
+    async fn analyze_convergence(&self) -> GdkResult<ConvergenceMetrics> {
         let recent_commits = self.commit_history.iter().rev().take(10);
 
         let quality_trend: Vec<f64> = recent_commits.map(|c| c.health_score).collect();
@@ -423,7 +423,7 @@ impl GitWorkflow for GitWorkflowManager {
         })
     }
 
-    async fn update_thread_colors(&mut self) -> Result<()> {
+    async fn update_thread_colors(&mut self) -> GdkResult<()> {
         for commit in &mut self.commit_history {
             for thread in commit.file_threads.values_mut() {
                 thread.color_status = ThreadColor::from_scores(
@@ -437,7 +437,7 @@ impl GitWorkflow for GitWorkflowManager {
         Ok(())
     }
 
-    async fn validate_ci_cd(&self, _commit_hash: &str) -> Result<bool> {
+    async fn validate_ci_cd(&self, _commit_hash: &str) -> GdkResult<bool> {
         let output = Command::new("cargo")
             .args(["test", "--", "--test-threads=1"])
             .current_dir(&self.repo_path)
@@ -449,7 +449,7 @@ impl GitWorkflow for GitWorkflowManager {
 }
 
 impl GitWorkflowManager {
-    async fn get_changed_files(&self) -> Result<Vec<String>> {
+    async fn get_changed_files(&self) -> GdkResult<Vec<String>> {
         let output = Command::new("git")
             .args(["diff", "--name-only", "HEAD~1..HEAD"])
             .current_dir(&self.repo_path)
@@ -464,7 +464,7 @@ impl GitWorkflowManager {
         Ok(files)
     }
 
-    async fn get_file_diff(&self, file_path: &str) -> Result<String> {
+    async fn get_file_diff(&self, file_path: &str) -> GdkResult<String> {
         let output = Command::new("git")
             .args(["diff", "HEAD~1..HEAD", "--", file_path])
             .current_dir(&self.repo_path)

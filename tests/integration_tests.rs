@@ -8,7 +8,7 @@
 //! - Error handling and recovery
 
 use gdk::core::GitWorkflowManager;
-use gdk::{CommitNode, ThreadColor, GdkResult};
+use gdk::{CommitNode, ThreadColor, GdkResult, GitWorkflow};
 use std::fs;
 use tempfile::TempDir;
 use tokio::test;
@@ -205,8 +205,7 @@ async fn test_error_handling() -> GdkResult<()> {
     let validation_error = gdk::GdkError::validation_error(
         "lint",
         "style_check",
-        "Missing documentation",
-        Some(0.6)
+        "Missing documentation"
     );
     assert_eq!(validation_error.category(), "validation");
     assert!(!validation_error.is_recoverable()); // Code issues need fixing
