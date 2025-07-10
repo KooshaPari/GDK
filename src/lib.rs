@@ -21,6 +21,7 @@ pub mod core;
 pub mod errors;
 pub mod git;
 pub mod performance;
+pub mod quality_metrics;
 pub mod threads;
 pub mod validation;
 pub mod visualization;

@@ -1,51 +1,153 @@
-use anyhow::{anyhow, Result};
+//! Advanced validation and quality metrics system for GDK
+//!
+//! This module provides comprehensive code quality validation:
+//! - Pluggable validator system for different languages and tools
+//! - Parallel execution with configurable timeouts
+//! - Advanced scoring algorithms with weighted metrics
+//! - Detailed recommendations and improvement suggestions
+//! - Security auditing and compliance checking
+//! - Performance profiling and memory usage analysis
+//! - Code coverage measurement and trend analysis
+//!
+//! # Example Usage
+//!
+//! ```rust,no_run
+//! use gdk::validation::ValidationSuite;
+//!
+//! #[tokio::main]
+//! async fn main() -> gdk::GdkResult<()> {
+//!     let suite = ValidationSuite::rust_default("./my-project");
+//!     let result = suite.validate("./my-project").await?;
+//!     
+//!     println!("Overall score: {:.3}", result.overall_score);
+//!     for recommendation in result.recommendations {
+//!         println!("💡 {}", recommendation);
+//!     }
+//!     
+//!     Ok(())
+//! }
+//! ```
+
+use crate::{GdkError, GdkResult};
+use anyhow::anyhow;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::process::Stdio;
 use tokio::process::Command;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+/// Comprehensive validation suite for code quality assessment
+///
+/// Manages a collection of validators that can run in parallel or sequentially.
+/// Each validator has configurable weight, timeout, and requirement level.
+/// Results are aggregated into an overall quality score with detailed recommendations.
+///
+/// # Features
+///
+/// - **Parallel Execution**: Run multiple validators concurrently for speed
+/// - **Weighted Scoring**: Different validators contribute different amounts
+/// - **Required vs Optional**: Some validators must pass for overall success
+/// - **Timeout Protection**: Prevent hanging on problematic code
+/// - **Fail Fast**: Stop execution on critical failures
+/// - **Detailed Output**: Capture stdout/stderr for analysis
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct ValidationSuite {
+    /// List of validators to execute
     pub validators: Vec<Validator>,
+    /// Rules governing validation behavior
     pub validation_rules: ValidationRules,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+/// Individual validator configuration
+///
+/// Represents a single validation tool (e.g., cargo clippy, eslint, mypy)
+/// with its execution parameters and scoring weight.
+///
+/// # Example
+///
+/// ```rust
+/// use gdk::validation::Validator;
+///
+/// let clippy = Validator {
+///     name: "cargo_clippy".to_string(),
+///     command: "cargo".to_string(),
+///     args: vec!["clippy".to_string(), "--".to_string(), "-D".to_string(), "warnings".to_string()],
+///     working_dir: Some("./project".to_string()),
+///     timeout_seconds: 120,
+///     weight: 0.25,
+///     is_required: false,
+/// };
+/// ```
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Validator {
+    /// Unique name for this validator
     pub name: String,
+    /// Command to execute (e.g., "cargo", "npm", "python")
     pub command: String,
+    /// Command line arguments
     pub args: Vec<String>,
+    /// Working directory (defaults to repo root)
     pub working_dir: Option<String>,
+    /// Maximum execution time in seconds
     pub timeout_seconds: u64,
+    /// Weight in overall score calculation (0.0-1.0)
     pub weight: f64,
+    /// Whether this validator must pass for overall success
     pub is_required: bool,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+/// Rules governing validation suite behavior
+///
+/// Controls how validators are executed and how results are interpreted.
+/// These rules affect performance, error handling, and pass/fail criteria.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct ValidationRules {
+    /// Minimum weighted score required for overall pass (0.0-1.0)
     pub min_passing_score: f64,
+    /// Whether all required validators must pass
     pub required_validators_must_pass: bool,
+    /// Stop execution on first critical failure
     pub fail_fast: bool,
+    /// Execute validators in parallel for speed
     pub parallel_execution: bool,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+/// Complete validation results with metrics and recommendations
+///
+/// Contains aggregated results from all validators with overall scoring,
+/// timing information, and actionable recommendations for improvement.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct ValidationResult {
+    /// Weighted overall score (0.0-1.0)
     pub overall_score: f64,
+    /// Whether validation passed based on rules
     pub passed: bool,
+    /// Individual validator results by name
     pub validator_results: HashMap<String, ValidatorResult>,
+    /// Total execution time in milliseconds
     pub execution_time_ms: u64,
+    /// Actionable recommendations for improvement
     pub recommendations: Vec<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+/// Result from a single validator execution
+///
+/// Contains detailed information about validator execution including
+/// output, timing, scoring, and success/failure status.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct ValidatorResult {
+    /// Name of the validator that ran
     pub name: String,
+    /// Whether the validator passed (exit code 0)
     pub passed: bool,
+    /// Calculated score (0.0-1.0) based on output analysis
     pub score: f64,
+    /// Standard output from validator execution
     pub output: String,
+    /// Standard error output from validator execution
     pub error_output: String,
+    /// Execution time in milliseconds
     pub execution_time_ms: u64,
+    /// Process exit code
     pub exit_code: i32,
 }
 
