@@ -22,6 +22,12 @@ colored = "2.1"
 petgraph = "0.6"
 thiserror = "2.0"
 
+[dev-dependencies]
+tempfile = "3.8"
+tokio-test = "0.4"
+proptest = "1.4"
+criterion = { version = "0.5", features = ["html_reports"] }
+
 [dependencies.clap]
 version = "4.0"
 features = ["derive"]
