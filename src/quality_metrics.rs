@@ -527,7 +527,7 @@ impl QualityMetricsAnalyzer {
     }
 
     /// Create analyzer with default configuration
-    pub fn default() -> Self {
+    pub fn with_default_config() -> Self {
         Self::new(QualityConfig::default())
     }
 
@@ -673,7 +673,7 @@ impl QualityMetricsAnalyzer {
                    dimensions.reliability * weights.reliability +
                    dimensions.usability * weights.usability;
         
-        Ok(score.min(1.0).max(0.0))
+        Ok(score.clamp(0.0, 1.0))
     }
 
     /// Default quality gates for standard projects
@@ -840,7 +840,7 @@ impl QualityMetricsAnalyzer {
                     _ => Err(GdkError::validation_error(
                         "quality_gate",
                         "unknown_dimension",
-                        format!("Unknown dimension: {}", dimension),
+                        format!("Unknown dimension: {dimension}"),
                     )),
                 }
             }

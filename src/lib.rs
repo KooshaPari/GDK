@@ -178,7 +178,7 @@ impl fmt::Display for ThreadColor {
             ThreadColor::LightGreen => ("🟢", "Light Green"),
             ThreadColor::Green => ("💚", "Green"),
         };
-        write!(f, "{} {}", emoji, name)
+        write!(f, "{emoji} {name}")
     }
 }
 

@@ -1,8 +1,17 @@
 [package]
 name = "gdk"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2021"
-description = "Git Workflow Deep Knowledge system for AI agents"
+description = "Enterprise-ready Git Workflow Deep Knowledge system for AI agents with infinite monkey theorem convergence"
+authors = ["GDK Team <team@gdk.dev>"]
+license = "MIT"
+repository = "https://github.com/KooshaPari/GDK"
+homepage = "https://github.com/KooshaPari/GDK"
+documentation = "https://docs.rs/gdk"
+keywords = ["git", "workflow", "ai", "agents", "enterprise"]
+categories = ["development-tools", "command-line-utilities", "algorithms"]
+readme = "README.md"
+exclude = ["screenshots/*", "demo*", "target/*"]
 
 [dependencies]
 git2 = "0.19"

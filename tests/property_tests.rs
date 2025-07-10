@@ -48,7 +48,7 @@ fn commit_message() -> impl Strategy<Value = String> {
 
 /// Generate valid timestamps
 fn timestamp() -> impl Strategy<Value = u64> {
-    (1_000_000_000u64..2_000_000_000u64)
+    1_000_000_000u64..2_000_000_000u64
 }
 
 /// Property: ThreadColor calculation should be deterministic and consistent
@@ -64,7 +64,7 @@ proptest! {
         let color2 = ThreadColor::from_scores(lint, type_check, test_coverage, functionality);
         
         // Same inputs should always produce same output
-        prop_assert_eq!(color1, color2);
+        prop_assert_eq!(color1.clone(), color2.clone());
         
         // Score conversion should be consistent
         prop_assert_eq!(color1.to_score(), color2.to_score());
@@ -294,7 +294,7 @@ proptest! {
         prop_assert_eq!(git_error.category(), "git");
         
         // Test ValidationError
-        let validation_error = GdkError::validation_error(&component, &rule, &details, Some(score));
+        let validation_error = GdkError::validation_error(&component, &rule, &details);
         prop_assert_eq!(validation_error.category(), "validation");
         prop_assert!(!validation_error.is_recoverable());
         
@@ -339,7 +339,7 @@ proptest! {
         };
         let metrics_json = serde_json::to_string(&metrics).unwrap();
         let metrics_deserialized: ThreadMetrics = serde_json::from_str(&metrics_json).unwrap();
-        prop_assert_eq!(metrics, metrics_deserialized.clone());
+        prop_assert_eq!(metrics.clone(), metrics_deserialized.clone());
         
         // Verify numerical precision is preserved
         prop_assert!((metrics.complexity_delta - metrics_deserialized.complexity_delta).abs() < 1e-10);

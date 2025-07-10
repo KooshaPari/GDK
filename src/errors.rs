@@ -125,8 +125,7 @@ impl GdkError {
         Self::ValidationError {
             rule: rule.into(),
             context: context.into(),
-            source: Box::new(std::io::Error::new(
-                std::io::ErrorKind::InvalidData,
+            source: Box::new(std::io::Error::other(
                 details.into(),
             )),
         }
@@ -276,8 +275,7 @@ impl From<tokio::task::JoinError> for GdkError {
         GdkError::ValidationError {
             rule: "task_join".to_string(),
             context: "Async task failed to join".to_string(),
-            source: Box::new(std::io::Error::new(
-                std::io::ErrorKind::Other,
+            source: Box::new(std::io::Error::other(
                 err.to_string(),
             )),
         }
@@ -289,9 +287,8 @@ impl From<anyhow::Error> for GdkError {
     fn from(err: anyhow::Error) -> Self {
         GdkError::ValidationError {
             rule: "anyhow_conversion".to_string(),
-            context: format!("Converted from anyhow: {}", err),
-            source: Box::new(std::io::Error::new(
-                std::io::ErrorKind::Other,
+            context: format!("Converted from anyhow: {err}"),
+            source: Box::new(std::io::Error::other(
                 err.to_string(),
             )),
         }
@@ -325,8 +322,7 @@ impl From<std::time::SystemTimeError> for GdkError {
         GdkError::ValidationError {
             rule: "system_time".to_string(),
             context: "Failed to get system time".to_string(),
-            source: Box::new(std::io::Error::new(
-                std::io::ErrorKind::Other,
+            source: Box::new(std::io::Error::other(
                 err.to_string(),
             )),
         }

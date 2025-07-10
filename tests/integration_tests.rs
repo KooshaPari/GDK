@@ -20,7 +20,12 @@ async fn setup_test_repo() -> GdkResult<(TempDir, GitWorkflowManager)> {
     })?;
     
     let repo_path = temp_dir.path().to_str().unwrap();
-    let manager = GitWorkflowManager::new(repo_path)?;
+    
+    // Initialize git repository and create initial commit
+    use git2::{Repository, Signature};
+    let repo = Repository::init(repo_path).map_err(|e| {
+        gdk::GdkError::git_error("initializing repository", e)
+    })?;
     
     // Create initial test file
     let test_file = temp_dir.path().join("src").join("lib.rs");
@@ -60,6 +65,43 @@ edition = "2021"
         gdk::GdkError::file_system_error(cargo_toml.to_string_lossy(), "Failed to write Cargo.toml", e)
     })?;
 
+    // Create initial commit to establish HEAD
+    let sig = Signature::now("Test User", "test@example.com").map_err(|e| {
+        gdk::GdkError::git_error("creating signature", e)
+    })?;
+    
+    let mut index = repo.index().map_err(|e| {
+        gdk::GdkError::git_error("getting index", e)
+    })?;
+    
+    index.add_path(std::path::Path::new("src/lib.rs")).map_err(|e| {
+        gdk::GdkError::git_error("adding file to index", e)
+    })?;
+    index.add_path(std::path::Path::new("Cargo.toml")).map_err(|e| {
+        gdk::GdkError::git_error("adding file to index", e)
+    })?;
+    
+    let tree_id = index.write_tree().map_err(|e| {
+        gdk::GdkError::git_error("writing tree", e)
+    })?;
+    
+    let tree = repo.find_tree(tree_id).map_err(|e| {
+        gdk::GdkError::git_error("finding tree", e)
+    })?;
+    
+    repo.commit(
+        Some("HEAD"),
+        &sig,
+        &sig,
+        "Initial commit",
+        &tree,
+        &[],
+    ).map_err(|e| {
+        gdk::GdkError::git_error("creating initial commit", e)
+    })?;
+    
+    let manager = GitWorkflowManager::new(repo_path)?;
+    
     Ok((temp_dir, manager))
 }
 

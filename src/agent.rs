@@ -387,7 +387,7 @@ impl<T: GitWorkflow> AgentWorkflowController<T> {
                 .ok_or_else(|| GdkError::validation_error(
                     "No revert points available",
                     "revert_stack",
-                    format!("Agent {} has no checkpoints to revert to", agent_id),
+                    format!("Agent {agent_id} has no checkpoints to revert to"),
                 ))?
         };
 
@@ -517,7 +517,7 @@ impl<T: GitWorkflow> AgentWorkflowController<T> {
                 agent_id,
                 "session_lookup",
                 None,
-                format!("No active session for agent {}", agent_id),
+                format!("No active session for agent {agent_id}"),
             ))
     }
 
@@ -528,7 +528,7 @@ impl<T: GitWorkflow> AgentWorkflowController<T> {
                 agent_id,
                 "session_lookup",
                 None,
-                format!("No active session for agent {}", agent_id),
+                format!("No active session for agent {agent_id}"),
             ))
     }
 

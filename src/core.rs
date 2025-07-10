@@ -311,7 +311,7 @@ impl GitWorkflow for GitWorkflowManager {
         let changed_files = self.get_changed_files().await?;
         for file_path in &changed_files {
             let (lint, type_check, test_coverage, functionality) =
-                self.run_quality_checks(&file_path).await?;
+                self.run_quality_checks(file_path).await?;
 
             let color_status =
                 ThreadColor::from_scores(lint, type_check, test_coverage, functionality);
@@ -326,7 +326,7 @@ impl GitWorkflow for GitWorkflowManager {
                 functionality_score: functionality,
                 history: vec![ThreadState {
                     commit_hash: commit_hash.clone(),
-                    diff_content: self.get_file_diff(&file_path).await.unwrap_or_default(),
+                    diff_content: self.get_file_diff(file_path).await.unwrap_or_default(),
                     metrics: ThreadMetrics {
                         lines_added: 0,
                         lines_removed: 0,

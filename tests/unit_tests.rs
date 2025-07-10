@@ -187,7 +187,7 @@ fn test_commit_node() {
 fn test_error_categories() {
     let errors = vec![
         (GdkError::git_error("test", git2::Error::from_str("test")), "git", false),
-        (GdkError::validation_error("lint", "rule", "details", Some(0.5)), "validation", false),
+        (GdkError::validation_error("lint", "rule", "details"), "validation", false),
         (GdkError::convergence_error("reason", 10, 0.7, 0.8), "convergence", true),
         (GdkError::configuration_error("setting", "message", None), "configuration", false),
     ];
