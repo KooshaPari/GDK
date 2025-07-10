@@ -1,0 +1,289 @@
+<\!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌳 GDK Tree Visualization Demo</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            color: white;
+            padding: 20px 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 600;
+        }
+        .header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+        .svg-container {
+            padding: 20px;
+            overflow: auto;
+            background: #f8fafc;
+        }
+        .stats {
+            padding: 20px 30px;
+            background: #ffffff;
+            border-top: 1px solid #e2e8f0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        .stat-card {
+            text-align: center;
+            padding: 15px;
+            background: #f8fafc;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #1e40af;
+        }
+        .stat-label {
+            color: #64748b;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+        .node { fill-opacity: 0.8; stroke-width: 2; cursor: pointer; }
+        .node:hover { fill-opacity: 1.0; stroke-width: 3; }
+        .branch-line { stroke-width: 2; fill: none; }
+        .thread { fill: none; opacity: 0.7; cursor: pointer; }
+        .thread:hover { opacity: 1.0; }
+        .label { font-family: monospace; font-size: 10px; fill: #333; }
+        .branch-label { font-family: sans-serif; font-size: 12px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌳 GDK Tree Visualization</h1>
+            <p>Git Workflow Deep Knowledge System - Commit Tree with Colored File Quality Threads</p>
+        </div>
+        
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-value">24</div>
+                <div class="stat-label">Total Commits</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">5</div>
+                <div class="stat-label">Active Branches</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">120</div>
+                <div class="stat-label">File Threads</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">18</div>
+                <div class="stat-label">Converged Commits</div>
+            </div>
+        </div>
+        
+        <div class="svg-container">
+            <svg width="1200" height="700" xmlns="http://www.w3.org/2000/svg">
+                <rect width="100%" height="100%" fill="#f8fafc"/>
+                
+                <\!-- Main branch stem -->
+                <line x1="600" y1="50" x2="600" y2="650" stroke="#2E86AB" class="branch-line" opacity="0.3" stroke-width="4"/>
+                <text x="615" y="40" class="branch-label" fill="#2E86AB">main (trunk)</text>
+                
+                <\!-- Spiral branches -->
+                <line x1="450" y1="150" x2="450" y2="450" stroke="#A23B72" class="branch-line" opacity="0.3" stroke-width="3"/>
+                <text x="460" y="140" class="branch-label" fill="#A23B72">spiral-experiment-0</text>
+                
+                <line x1="750" y1="200" x2="750" y2="500" stroke="#F18F01" class="branch-line" opacity="0.3" stroke-width="3"/>
+                <text x="760" y="190" class="branch-label" fill="#F18F01">spiral-experiment-1</text>
+                
+                <line x1="350" y1="300" x2="350" y2="450" stroke="#6A994E" class="branch-line" opacity="0.3" stroke-width="2"/>
+                <text x="360" y="290" class="branch-label" fill="#6A994E">spiral-2</text>
+                
+                <line x1="850" y1="350" x2="850" y2="500" stroke="#577590" class="branch-line" opacity="0.3" stroke-width="2"/>
+                <text x="860" y="340" class="branch-label" fill="#577590">spiral-3</text>
+                
+                <\!-- File quality threads (the N-wide edges with colors) -->
+                <\!-- From root to first commit -->
+                <line x1="596" y1="100" x2="596" y2="150" stroke="#22C55E" stroke-width="4" class="thread" opacity="0.7">
+                    <title>src/core.rs - Green Quality (0.95)</title>
+                </line>
+                <line x1="600" y1="100" x2="600" y2="150" stroke="#84CC16" stroke-width="3" class="thread" opacity="0.7">
+                    <title>src/lib.rs - Light Green Quality (0.82)</title>
+                </line>
+                <line x1="604" y1="100" x2="604" y2="150" stroke="#EAB308" stroke-width="2" class="thread" opacity="0.7">
+                    <title>tests/integration.rs - Yellow Quality (0.67)</title>
+                </line>
+                
+                <\!-- Main branch progression with improving quality -->
+                <line x1="596" y1="150" x2="596" y2="200" stroke="#22C55E" stroke-width="4" class="thread" opacity="0.7">
+                    <title>src/core.rs - Excellent Quality (0.97)</title>
+                </line>
+                <line x1="600" y1="150" x2="600" y2="200" stroke="#22C55E" stroke-width="3" class="thread" opacity="0.7">
+                    <title>src/lib.rs - Excellent Quality (0.93)</title>
+                </line>
+                <line x1="604" y1="150" x2="604" y2="200" stroke="#84CC16" stroke-width="3" class="thread" opacity="0.7">
+                    <title>tests/integration.rs - Good Quality (0.78)</title>
+                </line>
+                
+                <\!-- Branch out to spirals -->
+                <line x1="596" y1="200" x2="446" y2="250" stroke="#F97316" stroke-width="2" class="thread" opacity="0.6">
+                    <title>spiral/experiment_a.rs - Experimental (0.43)</title>
+                </line>
+                <line x1="604" y1="200" x2="754" y2="250" stroke="#EF4444" stroke-width="1" class="thread" opacity="0.6">
+                    <title>spiral/experiment_b.rs - Needs Work (0.21)</title>
+                </line>
+                
+                <\!-- More main branch progression -->
+                <line x1="596" y1="200" x2="596" y2="250" stroke="#22C55E" stroke-width="4" class="thread" opacity="0.7">
+                    <title>src/core.rs - Stable Quality (0.96)</title>
+                </line>
+                <line x1="600" y1="200" x2="600" y2="250" stroke="#22C55E" stroke-width="3" class="thread" opacity="0.7">
+                    <title>src/lib.rs - Stable Quality (0.94)</title>
+                </line>
+                
+                <\!-- Spiral internal progression -->
+                <line x1="446" y1="250" x2="446" y2="300" stroke="#EAB308" stroke-width="2" class="thread" opacity="0.6">
+                    <title>spiral/experiment_a.rs - Improving (0.61)</title>
+                </line>
+                <line x1="754" y1="250" x2="754" y2="300" stroke="#F97316" stroke-width="2" class="thread" opacity="0.6">
+                    <title>spiral/experiment_b.rs - Getting Better (0.38)</title>
+                </line>
+                
+                <\!-- Commit nodes (the nodes on the stem) -->
+                <\!-- Root commit -->
+                <circle cx="600" cy="100" r="10" fill="#84CC16" stroke="#2E86AB" class="node" stroke-width="3">
+                    <title>Initial Commit - Health: 0.78, Files: 3, Converged: false</title>
+                </circle>
+                <circle cx="600" cy="100" r="6" fill="#84CC16" opacity="0.9"/>
+                <text x="600" y="125" class="label" text-anchor="middle">init</text>
+                
+                <\!-- Main branch nodes with convergence -->
+                <circle cx="600" cy="150" r="10" fill="#22C55E" stroke="#2E86AB" class="node" stroke-width="3">
+                    <title>Core Implementation - Health: 0.89, Files: 3, Converged: true</title>
+                </circle>
+                <circle cx="600" cy="150" r="6" fill="#22C55E" opacity="0.9"/>
+                <circle cx="608" cy="142" r="3" fill="#10B981" stroke="#ffffff" stroke-width="1"/>
+                <text x="600" y="175" class="label" text-anchor="middle">core-v1</text>
+                
+                <circle cx="600" cy="200" r="10" fill="#22C55E" stroke="#2E86AB" class="node" stroke-width="3">
+                    <title>Feature Complete - Health: 0.94, Files: 3, Converged: true</title>
+                </circle>
+                <circle cx="600" cy="200" r="6" fill="#22C55E" opacity="0.9"/>
+                <circle cx="608" cy="192" r="3" fill="#10B981" stroke="#ffffff" stroke-width="1"/>
+                <text x="600" y="225" class="label" text-anchor="middle">feat-v1</text>
+                
+                <circle cx="600" cy="250" r="10" fill="#22C55E" stroke="#2E86AB" class="node" stroke-width="3">
+                    <title>Stable Release - Health: 0.96, Files: 2, Converged: true</title>
+                </circle>
+                <circle cx="600" cy="250" r="6" fill="#22C55E" opacity="0.9"/>
+                <circle cx="608" cy="242" r="3" fill="#10B981" stroke="#ffffff" stroke-width="1"/>
+                <text x="600" y="275" class="label" text-anchor="middle">v1.0.0</text>
+                
+                <\!-- Spiral branch nodes -->
+                <circle cx="450" cy="250" r="8" fill="#F97316" stroke="#A23B72" class="node" stroke-width="2">
+                    <title>Experimental Feature A - Health: 0.43, Files: 2, Converged: false</title>
+                </circle>
+                <circle cx="450" cy="250" r="5" fill="#F97316" opacity="0.8"/>
+                <text x="450" y="275" class="label" text-anchor="middle">exp-a-1</text>
+                
+                <circle cx="750" cy="250" r="8" fill="#EF4444" stroke="#F18F01" class="node" stroke-width="2">
+                    <title>Experimental Feature B - Health: 0.21, Files: 2, Converged: false</title>
+                </circle>
+                <circle cx="750" cy="250" r="5" fill="#EF4444" opacity="0.8"/>
+                <text x="750" y="275" class="label" text-anchor="middle">exp-b-1</text>
+                
+                <circle cx="450" cy="300" r="8" fill="#EAB308" stroke="#A23B72" class="node" stroke-width="2">
+                    <title>Refined Experiment A - Health: 0.61, Files: 2, Converged: false</title>
+                </circle>
+                <circle cx="450" cy="300" r="5" fill="#EAB308" opacity="0.8"/>
+                <text x="450" y="325" class="label" text-anchor="middle">exp-a-2</text>
+                
+                <circle cx="750" cy="300" r="8" fill="#F97316" stroke="#F18F01" class="node" stroke-width="2">
+                    <title>Improved Experiment B - Health: 0.38, Files: 2, Converged: false</title>
+                </circle>
+                <circle cx="750" cy="300" r="5" fill="#F97316" opacity="0.8"/>
+                <text x="750" y="325" class="label" text-anchor="middle">exp-b-2</text>
+                
+                <\!-- More spiral nodes showing convergence attempts -->
+                <circle cx="450" cy="350" r="8" fill="#84CC16" stroke="#A23B72" class="node" stroke-width="2">
+                    <title>Converging A - Health: 0.76, Files: 2, Converged: false</title>
+                </circle>
+                <circle cx="450" cy="350" r="5" fill="#84CC16" opacity="0.8"/>
+                <text x="450" y="375" class="label" text-anchor="middle">exp-a-3</text>
+                
+                <circle cx="450" cy="400" r="8" fill="#22C55E" stroke="#A23B72" class="node" stroke-width="2">
+                    <title>Experiment A Success - Health: 0.88, Files: 2, Converged: true</title>
+                </circle>
+                <circle cx="450" cy="400" r="5" fill="#22C55E" opacity="0.8"/>
+                <circle cx="458" cy="392" r="3" fill="#10B981" stroke="#ffffff" stroke-width="1"/>
+                <text x="450" y="425" class="label" text-anchor="middle">exp-a-final</text>
+                
+                <\!-- Legend -->
+                <g transform="translate(30, 550)">
+                    <rect x="0" y="0" width="280" height="140" fill="white" stroke="#e2e8f0" stroke-width="1" rx="8" opacity="0.95"/>
+                    <text x="15" y="25" class="branch-label" fill="#374151">File Thread Quality Legend</text>
+                    
+                    <circle cx="25" cy="45" r="6" fill="#22C55E"/>
+                    <text x="40" y="50" class="label" fill="#374151">Green: Excellent Quality (0.9+)</text>
+                    
+                    <circle cx="25" cy="65" r="6" fill="#84CC16"/>
+                    <text x="40" y="70" class="label" fill="#374151">Light Green: Good Quality (0.7+)</text>
+                    
+                    <circle cx="25" cy="85" r="6" fill="#EAB308"/>
+                    <text x="40" y="90" class="label" fill="#374151">Yellow: Moderate Quality (0.5+)</text>
+                    
+                    <circle cx="25" cy="105" r="6" fill="#F97316"/>
+                    <text x="40" y="110" class="label" fill="#374151">Orange: Needs Work (0.3+)</text>
+                    
+                    <circle cx="25" cy="125" r="6" fill="#EF4444"/>
+                    <text x="40" y="130" class="label" fill="#374151">Red: Critical Issues (&lt;0.3)</text>
+                    
+                    <circle cx="200" cy="50" r="4" fill="#10B981" stroke="#ffffff" stroke-width="1"/>
+                    <text x="215" y="55" class="label" fill="#374151">Converged Commit</text>
+                    
+                    <line x1="200" y1="70" x2="240" y2="70" stroke="#22C55E" stroke-width="4" opacity="0.7"/>
+                    <text x="200" y="85" class="label" fill="#374151">File Quality Thread</text>
+                </g>
+                
+                <\!-- Description -->
+                <g transform="translate(900, 80)">
+                    <rect x="0" y="0" width="280" height="200" fill="white" stroke="#e2e8f0" stroke-width="1" rx="8" opacity="0.95"/>
+                    <text x="15" y="25" class="branch-label" fill="#374151">How to Read This Tree</text>
+                    
+                    <text x="15" y="45" class="label" fill="#374151">• Circles = Git commits (nodes)</text>
+                    <text x="15" y="60" class="label" fill="#374151">• Lines = Branches (main stem)</text>
+                    <text x="15" y="75" class="label" fill="#374151">• Colored threads = File quality</text>
+                    <text x="15" y="90" class="label" fill="#374151">• Thread thickness = Quality score</text>
+                    <text x="15" y="105" class="label" fill="#374151">• Green dot = Converged commit</text>
+                    
+                    <text x="15" y="130" class="label" fill="#374151" style="font-weight: bold;">Infinite Monkey Approach:</text>
+                    <text x="15" y="145" class="label" fill="#374151">Spiral branches attempt to</text>
+                    <text x="15" y="160" class="label" fill="#374151">converge from same starting</text>
+                    <text x="15" y="175" class="label" fill="#374151">point until quality improves</text>
+                    <text x="15" y="190" class="label" fill="#374151">and tests pass consistently</text>
+                </g>
+            </svg>
+        </div>
+    </div>
+</body>
+</html>

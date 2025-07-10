@@ -1,0 +1,42 @@
+🌳 GDK Git Workflow Tree Visualization
+📊 Total commits: 12 | Max depth: 4
+════════════════════════════════════════════════════════════════════════════════
+Thread Colors: 🔴 Red 🟠 Orange 🟡 Yellow 🟢 Light Green 💚 Green
+
+🌿 a1b2c3d4 (0.95) [💚 💚 🟢] Initial project setup
+🌳 ├── e5f6g7h8 🌀 (0.42) [🔴 🟡 🟠] Infinite monkey attempt 1
+🌳 ├── i9j0k1l2 🌀 (0.38) [🔴 🔴 🟠] Infinite monkey attempt 2  
+🌳 └── m3n4o5p6 🌀 (0.87) [💚 🟢 💚] Infinite monkey attempt 3
+🌳     🌿 q7r8s9t0 (0.91) [💚 💚 💚] Add user authentication module
+🌳         🌿 u1v2w3x4 🔀 (0.88) [💚 🟢 💚] Merge spiral-auth branch
+🌳             🌳 ├── y5z6a7b8 (0.85) [💚 🟢 🟢] Fix authentication edge cases
+🌳             🌿 └── c9d0e1f2 (0.92) [💚 💚 💚] Add password validation
+
+🌿 g3h4i5j6 (0.78) [🟢 🟡 🟢] Database connection layer
+🌳 ├── k7l8m9n0 🌀 (0.51) [🟡 🟠 🟢] Spiral attempt - query optimization
+🌳 └── o1p2q3r4 🌀 (0.83) [💚 🟢 💚] Spiral converged - async queries
+🌳     🌿 s5t6u7v8 (0.89) [💚 💚 🟢] Add database migrations
+🌳         🌿 w9x0y1z2 (0.94) [💚 💚 💚] Performance optimization complete
+
+════════════════════════════════════════════════════════════════════════════════
+📈 Repository Statistics:
+Average Health: 0.79
+Healthy Commits (>0.8): 8/12
+
+Legend:
+🌀 = Spiral branch (infinite monkey iterations)
+🔀 = Merge commit
+🌳 = Continuing branch  
+🌿 = Terminal branch
+💚 = Green thread (excellent health)
+🟢 = Light Green thread (good health)
+🟡 = Yellow thread (moderate health)  
+🟠 = Orange thread (poor health)
+🔴 = Red thread (critical issues)
+
+This visualization shows how the GDK system represents:
+- Each commit as a node with health scores and thread colors
+- Spiral branches for iterative convergence attempts
+- Thread quality across different files in each commit
+- The organic tree structure showing actual git relationships
+- Health trends and convergence patterns over time
