@@ -20,6 +20,7 @@ pub mod convergence;
 pub mod core;
 pub mod errors;
 pub mod git;
+pub mod performance;
 pub mod threads;
 pub mod validation;
 pub mod visualization;
