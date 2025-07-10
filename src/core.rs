@@ -1,29 +1,96 @@
+//! Core workflow management implementation
+//!
+//! This module provides the primary [`GitWorkflowManager`] that orchestrates:
+//! - Infinite monkey theorem iterations with convergence detection
+//! - Spiral branching for experimental changes with automatic revert
+//! - Quality assessment across multiple dimensions (lint, types, tests, functionality)
+//! - Commit node creation with comprehensive thread analysis
+//! - Revert point management for intelligent state restoration
+
 use crate::{
     CommitNode, ConvergenceMetrics, FileThread, GitWorkflow, RevertPoint, ThreadColor,
-    ThreadMetrics, ThreadState,
+    ThreadMetrics, ThreadState, GdkError, GdkResult, GdkResultExt,
 };
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Context};
 use git2::{Repository, Signature};
 use std::collections::HashMap;
 use std::time::{SystemTime, UNIX_EPOCH};
 use tokio::process::Command;
 use uuid::Uuid;
 
+/// Primary workflow manager implementing the GDK git workflow system
+///
+/// Manages the complete lifecycle of AI agent interactions with git:
+/// - Repository state and commit history tracking
+/// - Quality-based thread management for files
+/// - Convergence analysis and spiral branching
+/// - Intelligent revert point creation and restoration
+///
+/// # Thread Safety
+///
+/// This struct is designed for single-threaded use within async contexts.
+/// For multi-agent scenarios, create separate instances per agent.
+///
+/// # Example
+///
+/// ```rust,no_run
+/// use gdk::core::GitWorkflowManager;
+///
+/// #[tokio::main]
+/// async fn main() -> gdk::GdkResult<()> {
+///     let mut manager = GitWorkflowManager::new("./my-project")?;
+///     
+///     // Create a checkpoint before risky changes
+///     let checkpoint = manager.create_revert_point("Before refactoring").await?;
+///     
+///     // Attempt convergence through iteration
+///     let result = manager.infinite_monkey_iteration(10).await?;
+///     
+///     println!("Converged with score: {}", result.health_score);
+///     Ok(())
+/// }
+/// ```
 pub struct GitWorkflowManager {
+    /// Git repository handle for all git operations
     pub repo: Repository,
+    /// Absolute path to the repository root
     pub repo_path: String,
+    /// Complete history of commit nodes with quality analysis
     pub commit_history: Vec<CommitNode>,
+    /// Stack of revert points for state restoration
     pub revert_points: Vec<RevertPoint>,
+    /// Current active branch name
     pub current_branch: String,
 }
 
 impl GitWorkflowManager {
-    pub fn new(repo_path: &str) -> Result<Self> {
+    /// Create a new workflow manager for the specified repository
+    ///
+    /// # Arguments
+    ///
+    /// * `repo_path` - Path to git repository (will be created if doesn't exist)
+    ///
+    /// # Returns
+    ///
+    /// A configured [`GitWorkflowManager`] ready for workflow operations
+    ///
+    /// # Errors
+    ///
+    /// Returns [`GdkError::GitError`] if:
+    /// - Repository cannot be opened or created
+    /// - Current HEAD cannot be determined
+    /// - File system permissions prevent access
+    pub fn new(repo_path: &str) -> GdkResult<Self> {
         let repo = Repository::open(repo_path)
             .or_else(|_| Repository::init(repo_path))
-            .map_err(|e| anyhow!("Failed to open/create repository: {}", e))?;
+            .with_git_context("opening or creating repository")?;
 
-        let current_branch = repo.head()?.shorthand().unwrap_or("main").to_string();
+        let current_branch = repo
+            .head()
+            .with_git_context("determining current branch")?
+            .shorthand()
+            .unwrap_or("main")
+            .to_string();
 
         Ok(Self {
             repo,
@@ -34,7 +101,27 @@ impl GitWorkflowManager {
         })
     }
 
-    pub async fn infinite_monkey_iteration(&mut self, max_attempts: u32) -> Result<CommitNode> {
+    /// Execute infinite monkey theorem convergence algorithm
+    ///
+    /// Attempts to reach convergence through iterative improvement:
+    /// 1. Create commit with current state
+    /// 2. Analyze quality metrics across all threads
+    /// 3. Check convergence criteria (score > 0.8, stable trend)
+    /// 4. If not converged, revert and try again
+    /// 5. Repeat until convergence or max attempts reached
+    ///
+    /// # Arguments
+    ///
+    /// * `max_attempts` - Maximum iterations before giving up
+    ///
+    /// # Returns
+    ///
+    /// The final [`CommitNode`] that achieved convergence
+    ///
+    /// # Errors
+    ///
+    /// Returns [`GdkError::ConvergenceError`] if convergence not achieved
+    pub async fn infinite_monkey_iteration(&mut self, max_attempts: u32) -> GdkResult<CommitNode> {
         let initial_revert_point = self.create_revert_point("infinite_monkey_start").await?;
 
         for attempt in 1..=max_attempts {
@@ -55,9 +142,15 @@ impl GitWorkflowManager {
             }
         }
 
-        Err(anyhow!(
-            "Failed to converge after {} attempts",
-            max_attempts
+        let last_score = self.commit_history.last()
+            .map(|c| c.health_score)
+            .unwrap_or(0.0);
+            
+        Err(GdkError::convergence_error(
+            "Maximum iterations reached without convergence",
+            max_attempts,
+            last_score,
+            0.8,
         ))
     }
 
@@ -216,7 +309,7 @@ impl GitWorkflow for GitWorkflowManager {
         let mut file_threads = HashMap::new();
 
         let changed_files = self.get_changed_files().await?;
-        for file_path in changed_files {
+        for file_path in &changed_files {
             let (lint, type_check, test_coverage, functionality) =
                 self.run_quality_checks(&file_path).await?;
 
@@ -224,7 +317,7 @@ impl GitWorkflow for GitWorkflowManager {
                 ThreadColor::from_scores(lint, type_check, test_coverage, functionality);
 
             let thread = FileThread {
-                file_path: file_path.clone(),
+                file_path: file_path.to_string(),
                 thread_id: Uuid::new_v4(),
                 color_status,
                 lint_score: lint,
@@ -244,7 +337,7 @@ impl GitWorkflow for GitWorkflowManager {
                 }],
             };
 
-            file_threads.insert(file_path, thread);
+            file_threads.insert(file_path.clone(), thread);
         }
 
         let convergence_metrics = self.analyze_convergence().await?;
