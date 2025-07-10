@@ -32,3 +32,7 @@ path = "src/lib.rs"
 [[bin]]
 name = "gdk-cli"
 path = "src/bin/main.rs"
+
+[[bin]]
+name = "generate_demo"
+path = "generate_demo.rs"

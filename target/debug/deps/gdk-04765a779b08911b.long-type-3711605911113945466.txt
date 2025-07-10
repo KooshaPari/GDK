@@ -1,1 +1,0 @@
-Pin<Box<(dyn std::future::Future<Output = Result<bool, anyhow::Error>> + Send + 'async_trait)>>

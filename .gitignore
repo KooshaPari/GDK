@@ -1,0 +1,20 @@
+# Rust build artifacts
+/target/
+**/*.rs.bk
+Cargo.lock
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Demo output files
+demo_tree.*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Hive mind files
+.hive-mind/
