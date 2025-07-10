@@ -27,11 +27,9 @@ pub mod visualization;
 // Re-export commonly used types
 pub use errors::{GdkError, GdkResult, GdkResultExt};
 
-use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt;
-use thiserror::Error;
 use uuid::Uuid;
 
 /// Represents a git commit enhanced with quality metrics and thread analysis

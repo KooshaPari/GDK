@@ -7,7 +7,6 @@
 //! - Thread management errors with file-specific details
 //! - Agent workflow errors with session context
 
-use std::fmt;
 use thiserror::Error;
 
 /// Comprehensive error types for all GDK operations
@@ -31,12 +30,12 @@ pub enum GdkError {
     },
 
     /// Validation rule violation
-    #[error("Validation failed for {component}: {rule} - {details}")]
+    #[error("Validation failed for {rule}: {context}")]
     ValidationError {
-        component: String,
         rule: String,
-        details: String,
-        score: Option<f64>,
+        context: String,
+        #[source]
+        source: Box<dyn std::error::Error + Send + Sync>,
     },
 
     /// Mathematical convergence analysis error
@@ -119,16 +118,17 @@ impl GdkError {
 
     /// Create a validation error with detailed context
     pub fn validation_error(
-        component: impl Into<String>,
         rule: impl Into<String>,
+        context: impl Into<String>,
         details: impl Into<String>,
-        score: Option<f64>,
     ) -> Self {
         Self::ValidationError {
-            component: component.into(),
             rule: rule.into(),
-            details: details.into(),
-            score,
+            context: context.into(),
+            source: Box::new(std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                details.into(),
+            )),
         }
     }
 
@@ -267,5 +267,33 @@ impl<T> GdkResultExt<T> for Result<T, std::io::Error> {
     
     fn with_agent_context(self, agent_id: &str, operation: &str) -> GdkResult<T> {
         self.map_err(|e| GdkError::file_system_error(agent_id, operation, e))
+    }
+}
+
+/// Implement conversion from anyhow::Error for compatibility
+impl From<anyhow::Error> for GdkError {
+    fn from(err: anyhow::Error) -> Self {
+        GdkError::ValidationError {
+            rule: "anyhow_conversion".to_string(),
+            context: format!("Converted from anyhow: {}", err),
+            source: Box::new(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                err.to_string(),
+            )),
+        }
+    }
+}
+
+/// Implement conversion from std::time::SystemTimeError
+impl From<std::time::SystemTimeError> for GdkError {
+    fn from(err: std::time::SystemTimeError) -> Self {
+        GdkError::ValidationError {
+            rule: "system_time".to_string(),
+            context: "Failed to get system time".to_string(),
+            source: Box::new(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                err.to_string(),
+            )),
+        }
     }
 }

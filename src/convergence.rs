@@ -1,13 +1,67 @@
-use crate::{CommitNode, ThreadColor};
-use anyhow::{anyhow, Result};
+//! Convergence analysis for the GDK infinite monkey theorem implementation
+//!
+//! This module provides mathematical analysis of workflow convergence:
+//! - Quality stability detection across commit history
+//! - Thread health ratio calculation for overall system health
+//! - Test pass consistency analysis for reliability metrics
+//! - Build success rate tracking for compilation health
+//! - Trend improvement analysis using linear regression
+//! - Convergence prediction algorithms
+//!
+//! # Mathematical Foundation
+//!
+//! The convergence algorithm uses weighted factors:
+//! - **Quality Stability (30%)**: Variance analysis of health scores
+//! - **Thread Health Ratio (25%)**: Percentage of green/light-green threads
+//! - **Test Pass Consistency (20%)**: Reliability of test execution
+//! - **Build Success Rate (15%)**: Compilation and build health
+//! - **Trend Improvement (10%)**: Linear regression slope of quality
+//!
+//! # Example Usage
+//!
+//! ```rust,no_run
+//! use gdk::convergence::ConvergenceAnalyzer;
+//!
+//! let analyzer = ConvergenceAnalyzer::new();
+//! let result = analyzer.analyze_convergence(&commit_history)?;
+//!
+//! if result.is_converged {
+//!     println!("Converged with confidence: {:.3}", result.confidence_score);
+//! } else {
+//!     for recommendation in result.recommendations {
+//!         println!("Recommendation: {}", recommendation);
+//!     }
+//! }
+//! ```
+
+use crate::{CommitNode, ThreadColor, GdkError, GdkResult};
+use anyhow::anyhow;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+/// Mathematical analyzer for detecting workflow convergence
+///
+/// Uses statistical analysis to determine when an agent's workflow
+/// has achieved stable, high-quality output. Configurable thresholds
+/// allow tuning for different project requirements.
+///
+/// # Configuration Parameters
+///
+/// - **convergence_threshold**: Minimum weighted score for convergence (0.0-1.0)
+/// - **stability_window**: Number of recent commits to analyze for stability
+/// - **quality_trend_window**: Number of commits for trend analysis
+/// - **min_green_threads_ratio**: Required percentage of healthy threads
+/// - **variance_threshold**: Maximum allowed variance in quality scores
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct ConvergenceAnalyzer {
+    /// Minimum weighted confidence score required for convergence (default: 0.8)
     pub convergence_threshold: f64,
+    /// Number of recent commits to analyze for stability (default: 5)
     pub stability_window: usize,
+    /// Number of commits to analyze for quality trends (default: 10)
     pub quality_trend_window: usize,
+    /// Minimum ratio of healthy (green/light-green) threads (default: 0.7)
     pub min_green_threads_ratio: f64,
+    /// Maximum allowed variance in quality scores for stability (default: 0.02)
     pub variance_threshold: f64,
 }
 
@@ -23,28 +77,83 @@ impl Default for ConvergenceAnalyzer {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+/// Result of convergence analysis with detailed metrics and recommendations
+///
+/// Provides comprehensive assessment of workflow state including:
+/// - Binary convergence decision based on weighted factors
+/// - Confidence score indicating strength of convergence
+/// - Detailed breakdown of contributing factors
+/// - Actionable recommendations for improvement
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct ConvergenceResult {
+    /// Whether the workflow has achieved convergence
     pub is_converged: bool,
+    /// Weighted confidence score (0.0-1.0) indicating convergence strength
     pub confidence_score: f64,
+    /// Detailed breakdown of individual convergence factors
     pub convergence_factors: ConvergenceFactors,
+    /// Human-readable recommendations for improving convergence
     pub recommendations: Vec<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+/// Individual factors contributing to overall convergence assessment
+///
+/// Each factor is normalized to 0.0-1.0 range where:
+/// - 0.0 indicates poor performance in this dimension
+/// - 1.0 indicates excellent performance in this dimension
+///
+/// Factors are weighted differently in the final convergence calculation.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct ConvergenceFactors {
+    /// Stability of quality scores over recent commits (0.0-1.0)
     pub quality_stability: f64,
+    /// Ratio of healthy threads to total threads (0.0-1.0)
     pub thread_health_ratio: f64,
+    /// Consistency of test pass rates across recent commits (0.0-1.0)
     pub test_pass_consistency: f64,
+    /// Success rate of builds/compilations (0.0-1.0)
     pub build_success_rate: f64,
+    /// Linear trend improvement in quality scores (0.0-1.0)
     pub trend_improvement: f64,
 }
 
 impl ConvergenceAnalyzer {
+    /// Create a new convergence analyzer with default configuration
+    ///
+    /// Default settings are suitable for most Rust projects:
+    /// - convergence_threshold: 0.8 (80% confidence required)
+    /// - stability_window: 5 commits
+    /// - quality_trend_window: 10 commits
+    /// - min_green_threads_ratio: 0.7 (70% healthy threads)
+    /// - variance_threshold: 0.02 (2% variance allowed)
     pub fn new() -> Self {
         Self::default()
     }
 
+    /// Create a convergence analyzer with custom configuration
+    ///
+    /// # Arguments
+    ///
+    /// * `convergence_threshold` - Minimum confidence score for convergence (0.0-1.0)
+    /// * `stability_window` - Number of recent commits for stability analysis
+    /// * `quality_trend_window` - Number of commits for trend analysis
+    /// * `min_green_threads_ratio` - Required ratio of healthy threads (0.0-1.0)
+    /// * `variance_threshold` - Maximum quality score variance for stability
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use gdk::convergence::ConvergenceAnalyzer;
+    ///
+    /// // Stricter convergence requirements
+    /// let analyzer = ConvergenceAnalyzer::with_config(
+    ///     0.9,  // 90% confidence required
+    ///     3,    // Only look at last 3 commits
+    ///     5,    // Shorter trend window
+    ///     0.8,  // 80% healthy threads required
+    ///     0.01  // Very low variance allowed
+    /// );
+    /// ```
     pub fn with_config(
         convergence_threshold: f64,
         stability_window: usize,
@@ -61,7 +170,33 @@ impl ConvergenceAnalyzer {
         }
     }
 
-    pub fn analyze_convergence(&self, commit_history: &[CommitNode]) -> Result<ConvergenceResult> {
+    /// Analyze commit history to determine convergence status
+    ///
+    /// Performs comprehensive mathematical analysis of the workflow:
+    /// 1. Calculate individual convergence factors
+    /// 2. Apply weighted scoring to determine overall confidence
+    /// 3. Generate actionable recommendations
+    /// 4. Make binary convergence decision
+    ///
+    /// # Arguments
+    ///
+    /// * `commit_history` - Chronological list of commits with quality metrics
+    ///
+    /// # Returns
+    ///
+    /// Detailed convergence analysis with recommendations
+    ///
+    /// # Mathematical Details
+    ///
+    /// The confidence score is calculated as:
+    /// ```text
+    /// confidence = 0.30 * quality_stability +
+    ///              0.25 * thread_health_ratio +
+    ///              0.20 * test_pass_consistency +
+    ///              0.15 * build_success_rate +
+    ///              0.10 * trend_improvement
+    /// ```
+    pub fn analyze_convergence(&self, commit_history: &[CommitNode]) -> GdkResult<ConvergenceResult> {
         if commit_history.is_empty() {
             return Ok(ConvergenceResult {
                 is_converged: false,

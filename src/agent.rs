@@ -1,54 +1,181 @@
-use crate::{CommitNode, ConvergenceMetrics, GitWorkflow, RevertPoint};
-use anyhow::{anyhow, Result};
+//! Agent workflow management for GDK system
+//!
+//! This module provides intelligent agent coordination for git workflows:
+//! - Multi-agent session tracking with isolated state
+//! - Infinite monkey theorem implementation with convergence detection
+//! - Spiral branching with automatic revert capabilities
+//! - Action logging and statistical analysis
+//! - Quality validation and CI/CD integration
+//!
+//! # Example Usage
+//!
+//! ```rust,no_run
+//! use gdk::agent::AgentWorkflowController;
+//! use gdk::core::GitWorkflowManager;
+//!
+//! #[tokio::main]
+//! async fn main() -> gdk::GdkResult<()> {
+//!     let workflow = GitWorkflowManager::new("./repo")?;
+//!     let mut controller = AgentWorkflowController::new(workflow);
+//!     
+//!     // Start agent session
+//!     let session_id = controller.start_agent_session("agent-1").await?;
+//!     
+//!     // Execute convergence workflow
+//!     let result = controller.execute_infinite_monkey_workflow("agent-1", 0.8).await?;
+//!     
+//!     println!("Converged with health score: {}", result.health_score);
+//!     Ok(())
+//! }
+//! ```
+
+use crate::{CommitNode, ConvergenceMetrics, GitWorkflow, RevertPoint, GdkError, GdkResult};
+use anyhow::anyhow;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::{SystemTime, UNIX_EPOCH};
 use uuid::Uuid;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+/// Represents an active agent session with workflow state
+///
+/// Each agent maintains isolated session state including:
+/// - Current commit tracking for state management
+/// - Revert point stack for intelligent backtracking
+/// - Convergence history for trend analysis
+/// - Spiral attempt tracking with configurable limits
+///
+/// # Thread Safety
+///
+/// AgentSession is designed for single-threaded use within async contexts.
+/// For concurrent access, use appropriate synchronization primitives.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct AgentSession {
+    /// Unique identifier for this agent session
     pub session_id: Uuid,
+    /// Agent identifier for tracking across the system
     pub agent_id: String,
+    /// Workflow type identifier (typically "gdk-workflow")
     pub workflow: String,
+    /// Unix timestamp when session was started
     pub start_time: u64,
+    /// Current git commit hash the agent is working on
     pub current_commit: Option<String>,
+    /// Stack of revert points for intelligent backtracking
     pub revert_stack: Vec<RevertPoint>,
+    /// Historical convergence metrics for trend analysis
     pub convergence_history: Vec<ConvergenceMetrics>,
+    /// Current number of spiral attempts (infinite monkey iterations)
     pub spiral_attempts: u32,
+    /// Maximum allowed spiral attempts before giving up
     pub max_spiral_attempts: u32,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+/// Represents a single action taken by an agent during workflow execution
+///
+/// Actions are logged for:
+/// - Debugging workflow failures and bottlenecks
+/// - Statistical analysis of agent performance
+/// - Audit trails for compliance and review
+/// - Pattern recognition for optimization
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct AgentAction {
+    /// Unique identifier for this specific action
     pub action_id: Uuid,
+    /// Agent that performed this action
     pub agent_id: String,
+    /// Type of action performed (see ActionType enum)
     pub action_type: ActionType,
+    /// Unix timestamp when action was initiated
     pub timestamp: u64,
+    /// Git commit hash before action execution
     pub commit_before: Option<String>,
+    /// Git commit hash after action completion
     pub commit_after: Option<String>,
+    /// Whether the action completed successfully
     pub success: bool,
+    /// Additional metadata specific to the action type
     pub metadata: HashMap<String, String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+/// Types of actions that agents can perform in the workflow
+///
+/// Each action type represents a different phase of the infinite monkey workflow:
+/// - **CommitCreate**: Create new commit with quality analysis
+/// - **RevertToPoint**: Restore to previous checkpoint
+/// - **SpiralBranch**: Create experimental branch for risky changes
+/// - **ConvergenceCheck**: Analyze current convergence status
+/// - **QualityValidation**: Run quality checks (lint, tests, etc.)
+/// - **CiCdValidation**: Validate through CI/CD pipeline
+/// - **InfiniteMonkeyIteration**: Complete iteration of convergence algorithm
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum ActionType {
+    /// Create a new commit with quality thread analysis
     CommitCreate,
+    /// Revert repository state to a previous checkpoint
     RevertToPoint,
+    /// Create experimental branch for testing risky changes
     SpiralBranch,
+    /// Analyze convergence metrics and trend detection
     ConvergenceCheck,
+    /// Execute quality validation (lint, typecheck, tests)
     QualityValidation,
+    /// Validate changes through CI/CD pipeline
     CiCdValidation,
+    /// Complete iteration of infinite monkey theorem algorithm
     InfiniteMonkeyIteration,
 }
 
+/// Multi-agent workflow controller implementing the infinite monkey theorem
+///
+/// Coordinates multiple AI agents working simultaneously on git workflows:
+/// - Isolated session management per agent
+/// - Convergence algorithm execution with automatic revert
+/// - Quality validation and CI/CD integration
+/// - Statistical tracking and recommendation engine
+///
+/// # Type Parameters
+///
+/// * `T` - Implementation of GitWorkflow trait (typically GitWorkflowManager)
+///
+/// # Example
+///
+/// ```rust,no_run
+/// use gdk::agent::AgentWorkflowController;
+/// use gdk::core::GitWorkflowManager;
+///
+/// let workflow = GitWorkflowManager::new("./repo")?;
+/// let mut controller = AgentWorkflowController::new(workflow);
+///
+/// // Start multiple agents
+/// controller.start_agent_session("agent-1").await?;
+/// controller.start_agent_session("agent-2").await?;
+///
+/// // Execute convergence workflows in parallel
+/// tokio::join!(
+///     controller.execute_infinite_monkey_workflow("agent-1", 0.8),
+///     controller.execute_infinite_monkey_workflow("agent-2", 0.8)
+/// );
+/// ```
 #[derive(Debug)]
 pub struct AgentWorkflowController<T: GitWorkflow> {
+    /// Git workflow implementation (typically GitWorkflowManager)
     pub workflow: T,
+    /// Active agent sessions indexed by agent_id
     pub active_sessions: HashMap<String, AgentSession>,
+    /// Complete history of all agent actions for analysis
     pub action_history: Vec<AgentAction>,
 }
 
 impl<T: GitWorkflow> AgentWorkflowController<T> {
+    /// Create a new agent workflow controller
+    ///
+    /// # Arguments
+    ///
+    /// * `workflow` - Git workflow implementation to manage
+    ///
+    /// # Returns
+    ///
+    /// A new controller ready to manage agent sessions
     pub fn new(workflow: T) -> Self {
         Self {
             workflow,
@@ -57,7 +184,26 @@ impl<T: GitWorkflow> AgentWorkflowController<T> {
         }
     }
 
-    pub async fn start_agent_session(&mut self, agent_id: &str) -> Result<Uuid> {
+    /// Start a new agent session with default configuration
+    ///
+    /// Creates an isolated session for the specified agent with:
+    /// - Unique session ID for tracking
+    /// - Empty revert stack for checkpoints
+    /// - Default spiral attempt limits (100)
+    /// - Convergence history tracking
+    ///
+    /// # Arguments
+    ///
+    /// * `agent_id` - Unique identifier for the agent
+    ///
+    /// # Returns
+    ///
+    /// Session UUID for tracking this agent's workflow
+    ///
+    /// # Errors
+    ///
+    /// Returns error if system time cannot be determined
+    pub async fn start_agent_session(&mut self, agent_id: &str) -> GdkResult<Uuid> {
         let session_id = Uuid::new_v4();
         let session = AgentSession {
             session_id,
@@ -75,11 +221,35 @@ impl<T: GitWorkflow> AgentWorkflowController<T> {
         Ok(session_id)
     }
 
+    /// Execute the infinite monkey theorem convergence algorithm
+    ///
+    /// Implements the core GDK workflow:
+    /// 1. Create initial revert point for safe experimentation
+    /// 2. Iteratively attempt solutions with quality validation
+    /// 3. Revert unsuccessful attempts automatically
+    /// 4. Continue until convergence criteria are met
+    /// 5. Return final converged commit with quality metrics
+    ///
+    /// # Arguments
+    ///
+    /// * `agent_id` - Agent to execute workflow for
+    /// * `target_convergence` - Required test pass rate (0.0-1.0)
+    ///
+    /// # Returns
+    ///
+    /// Final commit node that achieved convergence
+    ///
+    /// # Errors
+    ///
+    /// Returns [`GdkError::ConvergenceError`] if:
+    /// - Maximum spiral attempts reached without convergence
+    /// - Agent session not found
+    /// - Git operations fail during iteration
     pub async fn execute_infinite_monkey_workflow(
         &mut self,
         agent_id: &str,
         target_convergence: f64,
-    ) -> Result<CommitNode> {
+    ) -> GdkResult<CommitNode> {
         let initial_revert_point = self
             .workflow
             .create_revert_point("infinite_monkey_start")
@@ -91,32 +261,43 @@ impl<T: GitWorkflow> AgentWorkflowController<T> {
         }
 
         loop {
+            // Increment spiral attempts and check limits
             let (spiral_attempts, max_attempts) = {
                 let session = self.get_session_mut(agent_id)?;
                 session.spiral_attempts += 1;
                 (session.spiral_attempts, session.max_spiral_attempts)
             };
 
+            // Prevent infinite loops by enforcing attempt limits
             if spiral_attempts > max_attempts {
-                return Err(anyhow!("Max spiral attempts reached without convergence"));
+                return Err(GdkError::convergence_error(
+                    "Maximum spiral attempts reached without convergence",
+                    spiral_attempts,
+                    0.0, // No final score available
+                    target_convergence,
+                ));
             }
 
             let action = self
                 .log_action(agent_id, ActionType::InfiniteMonkeyIteration)
                 .await?;
 
+            // Create commit with current state and analyze quality
             let commit_node = self
                 .workflow
                 .create_commit_node(&format!("Infinite monkey attempt {spiral_attempts}"))
                 .await?;
 
+            // Update session with new commit
             {
                 let session = self.get_session_mut(agent_id)?;
                 session.current_commit = Some(commit_node.hash.clone());
             }
 
+            // Analyze convergence metrics for this iteration
             let convergence = self.workflow.analyze_convergence().await?;
 
+            // Store convergence data for trend analysis
             {
                 let session = self.get_session_mut(agent_id)?;
                 session.convergence_history.push(convergence.clone());
@@ -125,24 +306,49 @@ impl<T: GitWorkflow> AgentWorkflowController<T> {
             self.complete_action(&action, true, Some(&commit_node.hash))
                 .await?;
 
+            // Check if convergence criteria are met
             if convergence.test_pass_rate >= target_convergence && convergence.is_converged {
                 tracing::info!(
-                    "Agent {} achieved convergence after {} attempts",
+                    "Agent {} achieved convergence after {} attempts with score {:.3}",
                     agent_id,
-                    spiral_attempts
+                    spiral_attempts,
+                    convergence.test_pass_rate
                 );
                 return Ok(commit_node);
             }
 
+            // Revert to starting point for next iteration
+            tracing::debug!(
+                "Agent {} attempt {} failed (score: {:.3}), reverting",
+                agent_id,
+                spiral_attempts,
+                convergence.test_pass_rate
+            );
             self.workflow.revert_to_point(&initial_revert_point).await?;
         }
     }
 
+    /// Create a revert checkpoint for experimental changes
+    ///
+    /// Establishes a safe point that the agent can return to if
+    /// experimental changes fail. Useful for:
+    /// - Before attempting risky refactoring
+    /// - Prior to implementing complex features
+    /// - When entering uncertain code paths
+    ///
+    /// # Arguments
+    ///
+    /// * `agent_id` - Agent creating the checkpoint
+    /// * `reason` - Human-readable reason for the checkpoint
+    ///
+    /// # Returns
+    ///
+    /// Revert point that can be used for restoration
     pub async fn create_spiral_checkpoint(
         &mut self,
         agent_id: &str,
         reason: &str,
-    ) -> Result<RevertPoint> {
+    ) -> GdkResult<RevertPoint> {
         let action = self.log_action(agent_id, ActionType::RevertToPoint).await?;
 
         let revert_point = self.workflow.create_revert_point(reason).await?;
@@ -157,13 +363,33 @@ impl<T: GitWorkflow> AgentWorkflowController<T> {
         Ok(revert_point)
     }
 
-    pub async fn revert_to_last_checkpoint(&mut self, agent_id: &str) -> Result<()> {
+    /// Revert to the most recent checkpoint for this agent
+    ///
+    /// Restores repository state to the last revert point created by
+    /// this agent. Useful when:
+    /// - Experimental changes have failed
+    /// - Quality metrics have degraded significantly
+    /// - Manual intervention is needed
+    ///
+    /// # Arguments
+    ///
+    /// * `agent_id` - Agent to revert
+    ///
+    /// # Errors
+    ///
+    /// Returns error if no revert points are available
+    pub async fn revert_to_last_checkpoint(&mut self, agent_id: &str) -> GdkResult<()> {
+        // Pop the most recent revert point from the stack
         let revert_point = {
             let session = self.get_session_mut(agent_id)?;
             session
                 .revert_stack
                 .pop()
-                .ok_or_else(|| anyhow!("No revert points available for agent {}", agent_id))?
+                .ok_or_else(|| GdkError::validation_error(
+                    "No revert points available",
+                    "revert_stack",
+                    format!("Agent {} has no checkpoints to revert to", agent_id),
+                ))?
         };
 
         let action = self.log_action(agent_id, ActionType::RevertToPoint).await?;
@@ -181,11 +407,31 @@ impl<T: GitWorkflow> AgentWorkflowController<T> {
         Ok(())
     }
 
+    /// Validate current state and create commit if quality standards are met
+    ///
+    /// Performs comprehensive validation:
+    /// 1. Update thread colors based on quality metrics
+    /// 2. Create commit with quality analysis
+    /// 3. Validate through CI/CD pipeline
+    /// 4. Roll back if validation fails
+    ///
+    /// # Arguments
+    ///
+    /// * `agent_id` - Agent requesting the commit
+    /// * `message` - Git commit message
+    ///
+    /// # Returns
+    ///
+    /// Commit node if validation passes
+    ///
+    /// # Errors
+    ///
+    /// Returns error if CI/CD validation fails
     pub async fn validate_and_commit(
         &mut self,
         agent_id: &str,
         message: &str,
-    ) -> Result<CommitNode> {
+    ) -> GdkResult<CommitNode> {
         let action = self
             .log_action(agent_id, ActionType::QualityValidation)
             .await?;
