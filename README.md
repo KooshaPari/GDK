@@ -27,22 +27,77 @@ GDK transforms git into a powerful state management engine for AI agents, enabli
 - **🛡️ Enterprise Security**: Secure by design with audit trails and validation
 - **📊 Monitoring Ready**: Built-in metrics, observability, and performance tracking
 
-## 🖼️ Visualizations
+## 🖼️ Enterprise Visualizations & Demos
 
-### ASCII Tree View
-<img src="/KooshaPari/GDK/raw/main/screenshots/demo_tree.txt" alt="ASCII Tree Visualization" style="max-width: 100%;">
+### 🎬 Live Demo - Enterprise Workflow in Action
 
-*Beautiful Unicode tree showing commit hierarchy with color-coded health indicators*
+<div align="center">
+  
+![GDK Enterprise Demo](gdk-screenshots/kwatch-demo.gif)
 
-### SVG Visualization
-<img src="/KooshaPari/GDK/raw/main/screenshots/demo_tree.svg" alt="SVG Tree Visualization" style="max-width: 100%;">
+*Enterprise AI agents using GDK for quality-driven git workflows with real-time convergence*
 
-*Scalable vector graphics with precise node positioning and quality metrics*
+</div>
 
-### HTML Interactive View
-<img src="/KooshaPari/GDK/raw/main/screenshots/demo_tree.html" alt="HTML Interactive Tree" style="max-width: 100%;">
+### 🔥 Terminal Interface - Production Usage
 
-*Interactive web visualization with detailed commit information and branching structure*
+<div align="center">
+  
+![GDK Terminal Demo](gdk-screenshots/kwatch-terminal-demo.gif)
+
+*Production CLI interface showing multi-agent orchestration and quality threading*
+
+</div>
+
+### 📊 Interactive Dashboard - Enterprise Monitoring
+
+<div align="center">
+  
+![GDK TUI Demo](gdk-screenshots/kwatch-tui-demo.gif)
+
+*Real-time enterprise dashboard with agent monitoring and quality metrics*
+
+</div>
+
+### 🎯 Quality Threading in Action
+
+<div align="center">
+  
+![File Watching Demo](gdk-screenshots/kwatch-file-watching.gif)
+
+*Quality threads automatically updating as code changes - Red→Green convergence*
+
+</div>
+
+### 📈 Enterprise Features Overview
+
+<div align="center">
+
+![Enterprise Overview](gdk-screenshots/kwatch-demo-01-overview.png)
+
+*Complete enterprise feature set with monitoring, orchestration, and quality gates*
+
+</div>
+
+### ⚡ Performance Monitoring
+
+<div align="center">
+
+![Performance Dashboard](gdk-screenshots/kwatch-demo-02-status.png)
+
+*Real-time performance metrics and agent success rates in production*
+
+</div>
+
+### 🔗 API Integration
+
+<div align="center">
+
+![API Integration](gdk-screenshots/kwatch-demo-03-api.png)
+
+*Enterprise API endpoints for seamless integration with existing workflows*
+
+</div>
 
 ## 🧠 How It Works
 
