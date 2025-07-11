@@ -29,6 +29,10 @@ GDK transforms git into a powerful state management engine for AI agents, enabli
 
 ## 🖼️ GDK Enterprise Features & Visualizations
 
+### 🎬 Live Demonstrations
+
+![GDK Basic Usage Demo](demos/gdk-basic-usage.gif)
+
 ### 🎯 Tree Visualization Examples
 
 GDK generates beautiful ASCII, SVG, and HTML tree visualizations showing git workflow decision points with quality threading. Here's the actual GDK repository visualization:
@@ -66,6 +70,8 @@ GDK generates beautiful ASCII, SVG, and HTML tree visualizations showing git wor
 ```
 
 ### 🎬 Enterprise CLI Interface
+
+![GDK Agent Workflow Demo](demos/gdk-agent-workflow.gif)
 
 ```bash
 # Initialize enterprise agent workflow
@@ -123,6 +129,8 @@ GDK generates interactive HTML dashboards showing:
 - **Branch health indicators** with automated recommendations
 
 ### 🔄 Infinite Monkey Convergence in Action
+
+![GDK Infinite Monkey Convergence Demo](demos/gdk-convergence.gif)
 
 ```
 🐒 Infinite Monkey Algorithm Progress:
@@ -183,6 +191,8 @@ loop {
 
 ## 🚀 Production Deployment
 
+![GDK Installation & Setup Demo](demos/gdk-installation.gif)
+
 ### Enterprise Installation
 ```bash
 git clone https://github.com/KooshaPari/GDK.git
@@ -191,6 +201,9 @@ cargo build --release --locked
 ```
 
 ### Production Usage
+
+![GDK Production Usage Demo](demos/gdk-production-usage.gif)
+
 ```bash
 # Initialize enterprise workflow
 ./target/release/gdk-cli init --enterprise
