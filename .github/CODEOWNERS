@@ -1,0 +1,15 @@
+# CODEOWNERS — default reviewers for this repository.
+# Order matters: later rules override earlier ones.
+
+* @KooshaPari
+
+# Governance / meta
+/.github/                @KooshaPari
+/SECURITY.md             @KooshaPari
+/CODEOWNERS              @KooshaPari
+/.github/CODEOWNERS      @KooshaPari
+
+# Rust
+*.rs                      @KooshaPari
+/Cargo.toml               @KooshaPari
+/Cargo.lock               @KooshaPari
