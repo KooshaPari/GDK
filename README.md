@@ -154,6 +154,69 @@ Attempt 4: ✅ Quality: 0.96 (Lint: 💚, Tests: 💚, Security: 💚)
    • Quality Improvement: +29 points
 ```
 
+## 🚀 Getting Started
+
+### Installation
+
+For detailed installation instructions (binaries, build from source, Docker), see [INSTALL.md](INSTALL.md).
+
+**Quick start:**
+```bash
+# Build from source
+git clone https://github.com/KooshaPari/GDK.git
+cd GDK
+cargo build --release --locked
+export PATH="$(pwd)/target/release:$PATH"
+```
+
+### First-Run Example
+
+Initialize a GDK agent session and run a basic workflow:
+
+```bash
+# 1. Initialize an agent session
+$ gdk-cli init --agent-id my-first-agent
+[INFO] Initialized agent session my-first-agent
+Agent session ID: a1b2c3d4-e5f6-g7h8-i9j0-k1l2m3n4o5p6
+
+# 2. Create a checkpoint (save the current working state)
+$ gdk-cli checkpoint --agent-id my-first-agent --message "Initial stable state"
+[INFO] Created checkpoint for agent my-first-agent
+Checkpoint: checkpoint_abc123
+
+# 3. Check agent status
+$ gdk-cli status --agent-id my-first-agent
+Agent ID: my-first-agent
+Status: Active
+Checkpoints: 1
+Quality Score: 0.95 💚
+Success Rate: 100%
+
+# 4. Run a spiral (iterative quality improvement with auto-convergence)
+$ gdk-cli spiral --agent-id my-first-agent --branch-name "feature-branch"
+[INFO] Starting spiral for agent my-first-agent on branch feature-branch
+[INFO] Quality threshold: 0.95 (enterprise mode)
+🔄 Iteration 1: Quality score 0.82 (improving...)
+🔄 Iteration 2: Quality score 0.91 (almost there...)
+✅ Iteration 3: Quality score 0.97 (CONVERGED!)
+[INFO] Spiral completed successfully
+```
+
+### Key Concepts
+
+- **Agent**: A logical session representing a workflow (e.g., "my-ci-pipeline", "refactor-v2")
+- **Checkpoint**: A git commit snapshot that acts as a revert point
+- **Spiral**: An iterative cycle where the agent branches, tries changes, and converges to a quality threshold
+- **Quality Score**: Aggregate metric (0.0–1.0) across lint, tests, security, and other threads
+- **Threads**: Individual quality dimensions (lint, typecheck, tests, security, performance, docs)
+
+### Next Steps
+
+- Read [INSTALL.md](INSTALL.md) for comprehensive setup options
+- Check [ENTERPRISE.md](ENTERPRISE.md) for production deployment and configuration
+- Review [PLAN.md](PLAN.md) for the implementation roadmap
+- See [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) for contribution guidelines
+
 ## 🧠 How It Works
 
 ### 1. **Commit = Decision Point**
