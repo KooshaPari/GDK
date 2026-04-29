@@ -1,5 +1,7 @@
 # GDK — Git Workflow Deep Knowledge
 
+[![AI Slop Inside](https://sladge.net/badge.svg)](https://sladge.net)
+
 GDK is an experimental Rust library and CLI that treats a git repository as a
 state-management surface for AI agents: it tracks per-file "quality threads"
 (lint, typecheck, tests, security, performance, docs), creates checkpoints,
