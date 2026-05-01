@@ -23,6 +23,6 @@ jobs:
         uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
 
       - name: Run cargo-audit
-        uses: rustsec/audit-check@v2
+        uses: rustsec/audit-check@35b7b53b1e25b55642157ac01b4adceb5b9ebef3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
