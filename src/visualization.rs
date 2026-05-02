@@ -540,7 +540,7 @@ pub fn save_visualization<W: Write>(
 // Generate sample tree data for testing
 pub fn generate_sample_tree(num_commits: usize, num_branches: usize) -> Vec<CommitNode> {
     let mut commits = Vec::new();
-    let mut commit_counter = 1;
+    let mut _commit_counter = 1;
 
     // Create main trunk commits
     let trunk_commits = num_commits / 2;
@@ -552,13 +552,13 @@ pub fn generate_sample_tree(num_commits: usize, num_branches: usize) -> Vec<Comm
         };
 
         let commit = create_sample_commit(
-            format!("commit_{commit_counter}"),
-            format!("Main trunk commit {commit_counter}"),
+            format!("commit_{_commit_counter}"),
+            format!("Main trunk commit {_commit_counter}"),
             parent_hashes,
             0.7 + (i as f64 * 0.1) % 0.3,
         );
         commits.push(commit);
-        commit_counter += 1;
+        _commit_counter += 1;
     }
 
     // Create branch commits
@@ -580,7 +580,7 @@ pub fn generate_sample_tree(num_commits: usize, num_branches: usize) -> Vec<Comm
                 0.5 + (i as f64 * 0.2) % 0.4,
             );
             commits.push(commit);
-            commit_counter += 1;
+            _commit_counter += 1;
         }
     }
 
