@@ -1,10 +1,6 @@
 [advisories]
 db-path = "$CARGO_HOME/advisory-db"
 
-[[advisories.ignore]]
-id = "RUSTSEC-2024-0320"
-reason = "yaml-rust unmaintained; no safe upgrade available; scheduled for future refactor to serde_yaml"
-
 [licenses]
 allow = [
     "MIT",
@@ -16,7 +12,7 @@ allow = [
     "MPL-2.0",
     "0BSD",
     "CC0-1.0",
-    "Unicode-3.0",
+    "Unicode-3.0"
 ]
 
 [bans]
