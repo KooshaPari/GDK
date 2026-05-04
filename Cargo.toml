@@ -50,7 +50,7 @@ tempfile = "3.8"
 tokio-test = "0.4"
 proptest = "1.4"
 criterion = { version = "0.8", features = ["html_reports"] }
-pprof = { version = "0.14", features = ["criterion", "flamegraph"] }  # Profiling support
+pprof = { version = "0.15", features = ["criterion", "flamegraph"] }  # Profiling support
 
 [dependencies.clap]
 version = "4.0"
