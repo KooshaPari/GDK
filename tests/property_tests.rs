@@ -8,8 +8,8 @@
 //! - Serialization round-trip properties
 
 use gdk::{
-    ThreadColor, ThreadMetrics, ConvergenceMetrics, CommitNode, 
-    FileThread, GdkError, GdkResult,
+    ThreadColor, ThreadMetrics, ConvergenceMetrics, CommitNode,
+    FileThread, GdkError,
 };
 use proptest::prelude::*;
 use std::collections::HashMap;
@@ -127,9 +127,7 @@ proptest! {
             quality_score,
         };
         
-        // Lines should be non-negative
-        prop_assert!(metrics.lines_added >= 0);
-        prop_assert!(metrics.lines_removed >= 0);
+        // Lines are u32 so always non-negative
         
         // Quality score should be bounded
         prop_assert!(metrics.quality_score >= 0.0);
