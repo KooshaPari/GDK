@@ -1,6 +1,10 @@
 # Generated quality gate workflow - calls reusable phenotype workflow
 name: Quality Gate
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   pull_request:
     branches: [main, master]

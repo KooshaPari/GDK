@@ -1,5 +1,9 @@
 name: Legacy Tooling Gate (WARN Mode)
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
     branches: [main, master, develop]
@@ -20,10 +24,10 @@ jobs:
       pull-requests: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        uses: actions/checkout@v4
 
       - name: Checkout phenotype/repos for shared tools
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        uses: actions/checkout@v4
         with:
           repository: kooshapari/phenotype
           path: phenotype-repos
