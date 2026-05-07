@@ -1,5 +1,10 @@
 [advisories]
 db-path = "$CARGO_HOME/advisory-db"
+# RUSTSEC advisories that are accepted with justification
+# Add entries here when an advisory is reviewed and accepted:
+# [RUSTSEC-YYYY-NNNN]
+# reason = "Justification for accepting this advisory"
+# expires = "YYYY-MM-DD"
 
 [licenses]
 allow = [
@@ -12,7 +17,7 @@ allow = [
     "MPL-2.0",
     "0BSD",
     "CC0-1.0",
-    "Unicode-3.0"
+    "Unicode-3.0",
 ]
 
 [bans]
