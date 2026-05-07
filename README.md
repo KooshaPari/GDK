@@ -12,6 +12,7 @@
 [![Production Ready](https://img.shields.io/badge/Status-Production%20Ready-green)](https://github.com/KooshaPari/GDK)
 [![Enterprise Grade](https://img.shields.io/badge/Enterprise-Grade-blue)](https://github.com/KooshaPari/GDK)
 [![Performance Optimized](https://img.shields.io/badge/Performance-Optimized-orange)](https://github.com/KooshaPari/GDK)
+[![AI Slop Inside](https://sladge.net/badge.svg)](https://sladge.net)
 
 GDK transforms git into a powerful state management engine for AI agents, enabling intelligent branching, quality-based threading, and convergence algorithms. Each commit becomes a decision point where agents can branch out, spiral forward, or snap back to working states.
 
