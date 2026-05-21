@@ -1,6 +1,8 @@
 name: Doc Links
 on: [push, pull_request]
 
+timeout-minutes: 10
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true

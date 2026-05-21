@@ -7,6 +7,7 @@ concurrency:
 on:
   pull_request:
     paths: ['**/Cargo.toml']
+    timeout-minutes: 15
   workflow_dispatch:
 
 jobs:

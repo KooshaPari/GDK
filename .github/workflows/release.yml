@@ -6,6 +6,7 @@ concurrency:
 on:
   push:
     tags: ['v*']
+    timeout-minutes: 20
   workflow_dispatch:
     inputs:
       crate:

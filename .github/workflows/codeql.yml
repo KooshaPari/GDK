@@ -7,6 +7,7 @@ concurrency:
 on:
   push:
     branches: [main]
+    timeout-minutes: 20
   pull_request:
     branches: [main]
   schedule:
