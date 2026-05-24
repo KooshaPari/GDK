@@ -19,5 +19,5 @@ jobs:
   machete:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: bnjbvr/cargo-machete@main
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: bnjbvr/cargo-machete@f4a17c9e6f4f9e3f6b5a4dbf8b5d8c58c5d3f8d1
