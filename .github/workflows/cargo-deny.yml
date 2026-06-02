@@ -1,8 +1,16 @@
 name: cargo-deny
+permissions:
+  contents: read
+  pull-requests: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 
 on:
   push:
     branches: [main]
+    timeout-minutes: 10
   pull_request:
   workflow_dispatch:
   schedule:
@@ -10,9 +18,9 @@ on:
 
 jobs:
   cargo-deny:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v6
-      - uses: EmbarkStudios/cargo-deny-action@v2
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - uses: EmbarkStudios/cargo-deny-action@v6
         with:
           command: check advisories licenses
