@@ -14,5 +14,5 @@ permissions:
 
 jobs:
   quality:
-    uses: KooshaPari/phenotype-infrakit/.github/workflows/quality-gate.yml@main
+    uses: KooshaPari/phenotype-infrakit/.github/workflows/quality-gate.yml@0000000000000000000000000000000000000000 # placeholder SHA; source 404s; replace when reachable
     secrets: inherit
