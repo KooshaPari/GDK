@@ -16,5 +16,5 @@ permissions:
 
 jobs:
   coverage:
-    uses: KooshaPari/phenotype-infrakit/.github/workflows/coverage.yml@main
+    uses: KooshaPari/phenotype-infrakit/.github/workflows/coverage.yml@0000000000000000000000000000000000000000 # placeholder SHA; source 404s; replace when reachable
     secrets: inherit
