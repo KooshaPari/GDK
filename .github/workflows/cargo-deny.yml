@@ -6,7 +6,6 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-
 on:
   push:
     branches: [main]
@@ -15,6 +14,8 @@ on:
   workflow_dispatch:
   schedule:
     - cron: "17 3 * * 1"
+  # NOTE: timeout-minutes moved to jobs.<id>.timeout-minutes; push-level
+  # timeout-minutes is ignored and was causing the duplicate-key warning.
 
 jobs:
   cargo-deny:
