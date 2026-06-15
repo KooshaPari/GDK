@@ -2,10 +2,6 @@ name: cargo-deny
 permissions:
   contents: read
   pull-requests: read
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
 on:
   push:
     branches: [main]
@@ -17,6 +13,11 @@ on:
   # NOTE: timeout-minutes moved to jobs.<id>.timeout-minutes; push-level
   # timeout-minutes is ignored and was causing the duplicate-key warning.
 
+
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   cargo-deny:
     runs-on: ubuntu-24.04
