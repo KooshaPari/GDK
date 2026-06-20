@@ -15,6 +15,7 @@
 //! - [`ConvergenceMetrics`]: Mathematical convergence analysis
 //! - [`RevertPoint`]: Intelligent checkpoint for state restoration
 
+pub mod observability;
 pub mod agent;
 pub mod convergence;
 pub mod core;

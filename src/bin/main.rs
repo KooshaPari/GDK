@@ -4,6 +4,7 @@ use gdk::{agent::AgentWorkflowController, core::GitWorkflowManager, visualizatio
 use std::fs::File;
 use std::io::Write;
 use tracing::{info, Level};
+use gdk::observability::{self, SERVICE_NAME};
 
 #[derive(Parser)]
 #[command(name = "gdk")]
@@ -81,6 +82,9 @@ enum Commands {
 async fn main() -> Result<()> {
     let cli = Cli::parse();
 
+    let otlp_endpoint = observability::otlp_endpoint();
+    info!(service = SERVICE_NAME, otlp_endpoint = %otlp_endpoint, "gdk starting");
+
     let level = if cli.verbose {
         Level::DEBUG
     } else {
@@ -99,6 +103,10 @@ async fn main() -> Result<()> {
                 agent_id, session_id
             );
             println!("Agent session initialized: {session_id}");
+            let mut attrs = std::collections::HashMap::new();
+            attrs.insert("agent_id".to_string(), agent_id.clone());
+            attrs.insert("session_id".to_string(), session_id.clone());
+            observability::emit_span("gdk.init", attrs).await;
         }
 
         Commands::Commit { agent_id, message } => {
