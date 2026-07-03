@@ -29,7 +29,7 @@
 //! }
 //! ```
 
-use crate::{CommitNode, ConvergenceMetrics, GitWorkflow, RevertPoint, GdkError, GdkResult};
+use crate::{CommitNode, ConvergenceMetrics, GdkError, GdkResult, GitWorkflow, RevertPoint};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -381,14 +381,13 @@ impl<T: GitWorkflow> AgentWorkflowController<T> {
         // Pop the most recent revert point from the stack
         let revert_point = {
             let session = self.get_session_mut(agent_id)?;
-            session
-                .revert_stack
-                .pop()
-                .ok_or_else(|| GdkError::validation_error(
+            session.revert_stack.pop().ok_or_else(|| {
+                GdkError::validation_error(
                     "No revert points available",
                     "revert_stack",
                     format!("Agent {agent_id} has no checkpoints to revert to"),
-                ))?
+                )
+            })?
         };
 
         let action = self.log_action(agent_id, ActionType::RevertToPoint).await?;
@@ -468,7 +467,10 @@ impl<T: GitWorkflow> AgentWorkflowController<T> {
         Ok(commit_node)
     }
 
-    pub async fn get_convergence_status(&mut self, agent_id: &str) -> GdkResult<ConvergenceMetrics> {
+    pub async fn get_convergence_status(
+        &mut self,
+        agent_id: &str,
+    ) -> GdkResult<ConvergenceMetrics> {
         let action = self
             .log_action(agent_id, ActionType::ConvergenceCheck)
             .await?;
@@ -511,28 +513,32 @@ impl<T: GitWorkflow> AgentWorkflowController<T> {
     }
 
     fn get_session(&self, agent_id: &str) -> GdkResult<&AgentSession> {
-        self.active_sessions
-            .get(agent_id)
-            .ok_or_else(|| GdkError::agent_error(
+        self.active_sessions.get(agent_id).ok_or_else(|| {
+            GdkError::agent_error(
                 agent_id,
                 "session_lookup",
                 None,
                 format!("No active session for agent {agent_id}"),
-            ))
+            )
+        })
     }
 
     fn get_session_mut(&mut self, agent_id: &str) -> GdkResult<&mut AgentSession> {
-        self.active_sessions
-            .get_mut(agent_id)
-            .ok_or_else(|| GdkError::agent_error(
+        self.active_sessions.get_mut(agent_id).ok_or_else(|| {
+            GdkError::agent_error(
                 agent_id,
                 "session_lookup",
                 None,
                 format!("No active session for agent {agent_id}"),
-            ))
+            )
+        })
     }
 
-    async fn log_action(&mut self, agent_id: &str, action_type: ActionType) -> GdkResult<AgentAction> {
+    async fn log_action(
+        &mut self,
+        agent_id: &str,
+        action_type: ActionType,
+    ) -> GdkResult<AgentAction> {
         let session = self.get_session(agent_id)?;
 
         let action = AgentAction {

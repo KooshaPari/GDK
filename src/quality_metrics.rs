@@ -18,7 +18,7 @@
 //! - **Reliability**: Error handling, edge case coverage
 //! - **Usability**: API design, documentation quality
 
-use crate::{CommitNode, GdkResult, GdkError};
+use crate::{CommitNode, GdkError, GdkResult};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -533,32 +533,32 @@ impl QualityMetricsAnalyzer {
 
     /// Analyze quality metrics for a commit
     pub async fn analyze_commit_quality(
-        &mut self, 
-        commit: &CommitNode
+        &mut self,
+        commit: &CommitNode,
     ) -> GdkResult<QualityAnalysisResult> {
         // Calculate quality metrics from commit data
         let metrics = self.calculate_quality_metrics(commit).await?;
-        
+
         // Evaluate quality gates
         let gate_results = self.evaluate_quality_gates(&metrics)?;
-        
+
         // Analyze trends
         let trends = self.analyze_trends(&metrics)?;
-        
+
         // Generate recommendations
         let recommendations = self.generate_recommendations(&metrics, &trends)?;
-        
+
         // Predict future quality if enabled
         let predictions = if self.config.trend_config.enable_prediction {
             Some(self.predict_quality_trends()?)
         } else {
             None
         };
-        
+
         // Update history
         self.add_to_history(commit.hash.clone(), metrics.clone());
         self.current_metrics = metrics.clone();
-        
+
         Ok(QualityAnalysisResult {
             current_metrics: metrics,
             gate_results,
@@ -577,22 +577,22 @@ impl QualityMetricsAnalyzer {
 
         // Calculate dimension scores
         let dimensions = self.calculate_dimension_scores(commit)?;
-        
+
         // Calculate overall score using configured weights
         let overall_score = self.calculate_weighted_score(&dimensions)?;
-        
+
         // Calculate technical debt
         let technical_debt = self.calculate_technical_debt(commit)?;
-        
+
         // Calculate complexity metrics
         let complexity = self.calculate_complexity_metrics(commit)?;
-        
+
         // Calculate performance metrics
         let performance = self.calculate_performance_metrics(commit)?;
-        
+
         // Calculate security metrics
         let security = self.calculate_security_metrics(commit)?;
-        
+
         // Calculate coverage metrics
         let coverage = self.calculate_coverage_metrics(commit)?;
 
@@ -665,14 +665,14 @@ impl QualityMetricsAnalyzer {
     /// Calculate weighted overall score
     fn calculate_weighted_score(&self, dimensions: &QualityDimensions) -> GdkResult<f64> {
         let weights = &self.config.dimension_weights;
-        
-        let score = dimensions.correctness * weights.correctness +
-                   dimensions.maintainability * weights.maintainability +
-                   dimensions.security * weights.security +
-                   dimensions.performance * weights.performance +
-                   dimensions.reliability * weights.reliability +
-                   dimensions.usability * weights.usability;
-        
+
+        let score = dimensions.correctness * weights.correctness
+            + dimensions.maintainability * weights.maintainability
+            + dimensions.security * weights.security
+            + dimensions.performance * weights.performance
+            + dimensions.reliability * weights.reliability
+            + dimensions.usability * weights.usability;
+
         Ok(score.clamp(0.0, 1.0))
     }
 
@@ -778,15 +778,18 @@ impl QualityMetricsAnalyzer {
         let avg_coverage = if commit.file_threads.is_empty() {
             0.0
         } else {
-            commit.file_threads.values()
+            commit
+                .file_threads
+                .values()
                 .map(|thread| thread.test_coverage)
-                .sum::<f64>() / commit.file_threads.len() as f64
+                .sum::<f64>()
+                / commit.file_threads.len() as f64
         };
 
         Ok(CoverageMetrics {
             line_coverage: avg_coverage,
-            branch_coverage: avg_coverage * 0.9, // Estimate
-            function_coverage: avg_coverage * 1.1, // Estimate
+            branch_coverage: avg_coverage * 0.9,      // Estimate
+            function_coverage: avg_coverage * 1.1,    // Estimate
             integration_coverage: avg_coverage * 0.8, // Estimate
             low_coverage_files: Vec::new(),
         })
@@ -798,10 +801,19 @@ impl QualityMetricsAnalyzer {
         for gate in &self.gates {
             let actual_value = self.extract_metric_value(gate, metrics)?;
             let passed = self.evaluate_gate_condition(gate, actual_value);
-            
+
             let warning = if let Some(warning_threshold) = gate.warning_threshold {
-                if !passed || !self.evaluate_gate_condition_with_threshold(gate, actual_value, warning_threshold) {
-                    Some(format!("Quality gate '{}' is approaching threshold", gate.name))
+                if !passed
+                    || !self.evaluate_gate_condition_with_threshold(
+                        gate,
+                        actual_value,
+                        warning_threshold,
+                    )
+                {
+                    Some(format!(
+                        "Quality gate '{}' is approaching threshold",
+                        gate.name
+                    ))
                 } else {
                     None
                 }
@@ -829,21 +841,19 @@ impl QualityMetricsAnalyzer {
             QualityMetric::VulnerabilityCount => Ok(metrics.security.vulnerability_count as f64),
             QualityMetric::MaxComplexity => Ok(metrics.complexity.max_cyclomatic),
             QualityMetric::PerformanceRegressions => Ok(metrics.performance.regressions as f64),
-            QualityMetric::DimensionScore(dimension) => {
-                match dimension.as_str() {
-                    "correctness" => Ok(metrics.dimensions.correctness),
-                    "maintainability" => Ok(metrics.dimensions.maintainability),
-                    "security" => Ok(metrics.dimensions.security),
-                    "performance" => Ok(metrics.dimensions.performance),
-                    "reliability" => Ok(metrics.dimensions.reliability),
-                    "usability" => Ok(metrics.dimensions.usability),
-                    _ => Err(GdkError::validation_error(
-                        "quality_gate",
-                        "unknown_dimension",
-                        format!("Unknown dimension: {dimension}"),
-                    )),
-                }
-            }
+            QualityMetric::DimensionScore(dimension) => match dimension.as_str() {
+                "correctness" => Ok(metrics.dimensions.correctness),
+                "maintainability" => Ok(metrics.dimensions.maintainability),
+                "security" => Ok(metrics.dimensions.security),
+                "performance" => Ok(metrics.dimensions.performance),
+                "reliability" => Ok(metrics.dimensions.reliability),
+                "usability" => Ok(metrics.dimensions.usability),
+                _ => Err(GdkError::validation_error(
+                    "quality_gate",
+                    "unknown_dimension",
+                    format!("Unknown dimension: {dimension}"),
+                )),
+            },
         }
     }
 
@@ -851,7 +861,12 @@ impl QualityMetricsAnalyzer {
         self.evaluate_gate_condition_with_threshold(gate, actual_value, gate.threshold)
     }
 
-    fn evaluate_gate_condition_with_threshold(&self, gate: &QualityGate, actual_value: f64, threshold: f64) -> bool {
+    fn evaluate_gate_condition_with_threshold(
+        &self,
+        gate: &QualityGate,
+        actual_value: f64,
+        threshold: f64,
+    ) -> bool {
         match gate.operator {
             GateOperator::GreaterThan => actual_value > threshold,
             GateOperator::GreaterThanOrEqual => actual_value >= threshold,
@@ -873,7 +888,11 @@ impl QualityMetricsAnalyzer {
         })
     }
 
-    fn generate_recommendations(&self, _metrics: &QualityMetrics, _trends: &QualityTrends) -> GdkResult<Vec<QualityRecommendation>> {
+    fn generate_recommendations(
+        &self,
+        _metrics: &QualityMetrics,
+        _trends: &QualityTrends,
+    ) -> GdkResult<Vec<QualityRecommendation>> {
         // Simplified recommendation generation
         Ok(Vec::new())
     }
@@ -885,7 +904,10 @@ impl QualityMetricsAnalyzer {
             one_month: 0.82,
             three_months: 0.85,
             confidence: 0.70,
-            factors: vec!["test_coverage_improvement".to_string(), "complexity_reduction".to_string()],
+            factors: vec![
+                "test_coverage_improvement".to_string(),
+                "complexity_reduction".to_string(),
+            ],
         })
     }
 

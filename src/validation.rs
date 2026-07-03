@@ -28,7 +28,7 @@
 //! }
 //! ```
 
-use crate::{GdkResult, GdkError};
+use crate::{GdkError, GdkResult};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::process::Stdio;
@@ -355,7 +355,10 @@ impl ValidationSuite {
         })
     }
 
-    async fn execute_validator(validator: &Validator, repo_path: &str) -> GdkResult<ValidatorResult> {
+    async fn execute_validator(
+        validator: &Validator,
+        repo_path: &str,
+    ) -> GdkResult<ValidatorResult> {
         let start_time = std::time::Instant::now();
 
         let default_dir = repo_path.to_string();
@@ -368,27 +371,34 @@ impl ValidationSuite {
             .stdout(Stdio::piped())
             .stderr(Stdio::piped());
 
-        let child = command
-            .spawn()
-            .map_err(|e| GdkError::validation_error(
+        let child = command.spawn().map_err(|e| {
+            GdkError::validation_error(
                 "spawn_error",
                 format!("Failed to spawn validator {}", validator.name),
                 e.to_string(),
-            ))?;
+            )
+        })?;
 
         let timeout_duration = std::time::Duration::from_secs(validator.timeout_seconds);
         let output = tokio::time::timeout(timeout_duration, child.wait_with_output())
             .await
-            .map_err(|_| GdkError::validation_error(
-                "timeout",
-                format!("Validator {} timed out after {} seconds", validator.name, validator.timeout_seconds),
-                "Command execution exceeded timeout limit".to_string(),
-            ))?
-            .map_err(|e| GdkError::validation_error(
-                "execution_failed",
-                format!("Validator {} execution failed", validator.name),
-                e.to_string(),
-            ))?;
+            .map_err(|_| {
+                GdkError::validation_error(
+                    "timeout",
+                    format!(
+                        "Validator {} timed out after {} seconds",
+                        validator.name, validator.timeout_seconds
+                    ),
+                    "Command execution exceeded timeout limit".to_string(),
+                )
+            })?
+            .map_err(|e| {
+                GdkError::validation_error(
+                    "execution_failed",
+                    format!("Validator {} execution failed", validator.name),
+                    e.to_string(),
+                )
+            })?;
 
         let stdout = String::from_utf8_lossy(&output.stdout).to_string();
         let stderr = String::from_utf8_lossy(&output.stderr).to_string();

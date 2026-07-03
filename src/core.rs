@@ -8,8 +8,8 @@
 //! - Revert point management for intelligent state restoration
 
 use crate::{
-    CommitNode, ConvergenceMetrics, FileThread, GitWorkflow, RevertPoint, ThreadColor,
-    ThreadMetrics, ThreadState, GdkError, GdkResult, GdkResultExt,
+    CommitNode, ConvergenceMetrics, FileThread, GdkError, GdkResult, GdkResultExt, GitWorkflow,
+    RevertPoint, ThreadColor, ThreadMetrics, ThreadState,
 };
 use anyhow::anyhow;
 use git2::{Repository, Signature};
@@ -142,10 +142,12 @@ impl GitWorkflowManager {
             }
         }
 
-        let last_score = self.commit_history.last()
+        let last_score = self
+            .commit_history
+            .last()
             .map(|c| c.health_score)
             .unwrap_or(0.0);
-            
+
         Err(GdkError::convergence_error(
             "Maximum iterations reached without convergence",
             max_attempts,
