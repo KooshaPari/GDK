@@ -7,16 +7,14 @@
 //! - Error handling completeness
 //! - Serialization round-trip properties
 
-use gdk::{
-    CommitNode, ConvergenceMetrics, FileThread, GdkError, GdkResult, ThreadColor, ThreadMetrics,
-};
+use gdk::{CommitNode, ConvergenceMetrics, FileThread, GdkError, ThreadColor, ThreadMetrics};
 use proptest::prelude::*;
 use std::collections::HashMap;
 use uuid::Uuid;
 
 /// Generate valid quality scores (0.0 to 1.0)
 fn quality_score() -> impl Strategy<Value = f64> {
-    (0.0..=1.0f64)
+    0.0..=1.0f64
 }
 
 /// Generate thread colors
@@ -51,7 +49,7 @@ fn timestamp() -> impl Strategy<Value = u64> {
     1_000_000_000u64..2_000_000_000u64
 }
 
-/// Property: ThreadColor calculation should be deterministic and consistent
+// Property: ThreadColor calculation should be deterministic and consistent
 proptest! {
     #[test]
     fn prop_thread_color_deterministic(
@@ -111,7 +109,7 @@ proptest! {
     }
 }
 
-/// Property: ThreadMetrics should maintain logical consistency
+// Property: ThreadMetrics should maintain logical consistency
 proptest! {
     #[test]
     fn prop_thread_metrics_consistency(
@@ -127,10 +125,6 @@ proptest! {
             quality_score,
         };
 
-        // Lines should be non-negative
-        prop_assert!(metrics.lines_added >= 0);
-        prop_assert!(metrics.lines_removed >= 0);
-
         // Quality score should be bounded
         prop_assert!(metrics.quality_score >= 0.0);
         prop_assert!(metrics.quality_score <= 1.0);
@@ -141,7 +135,7 @@ proptest! {
     }
 }
 
-/// Property: ConvergenceMetrics should follow mathematical constraints
+// Property: ConvergenceMetrics should follow mathematical constraints
 proptest! {
     #[test]
     fn prop_convergence_metrics_constraints(
@@ -184,7 +178,7 @@ proptest! {
     }
 }
 
-/// Property: FileThread should maintain internal consistency
+// Property: FileThread should maintain internal consistency
 proptest! {
     #[test]
     fn prop_file_thread_consistency(
@@ -227,7 +221,7 @@ proptest! {
     }
 }
 
-/// Property: CommitNode should maintain structural integrity
+// Property: CommitNode should maintain structural integrity
 proptest! {
     #[test]
     fn prop_commit_node_integrity(
@@ -277,7 +271,7 @@ proptest! {
     }
 }
 
-/// Property: Error types should preserve information correctly
+// Property: Error types should preserve information correctly
 proptest! {
     #[test]
     fn prop_error_information_preservation(
@@ -315,7 +309,7 @@ proptest! {
     }
 }
 
-/// Property: Serialization should be lossless for all data types
+// Property: Serialization should be lossless for all data types
 proptest! {
     #[test]
     fn prop_serialization_lossless(
@@ -347,7 +341,7 @@ proptest! {
     }
 }
 
-/// Property: Quality calculations should be associative for averaging
+// Property: Quality calculations should be associative for averaging
 proptest! {
     #[test]
     fn prop_quality_averaging_associative(
@@ -375,7 +369,7 @@ proptest! {
     }
 }
 
-/// Property: Thread color transitions should be monotonic
+// Property: Thread color transitions should be monotonic
 proptest! {
     #[test]
     fn prop_color_transitions_monotonic(base_score in 0.0..0.9f64) {
