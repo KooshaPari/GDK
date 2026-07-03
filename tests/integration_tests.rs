@@ -113,7 +113,7 @@ edition = "2021"
 
 #[test]
 async fn test_basic_workflow_creation() -> GdkResult<()> {
-    let (_temp_dir, mut manager) = setup_test_repo().await?;
+    let (_temp_dir, manager) = setup_test_repo().await?;
 
     // Test that we can create a basic workflow manager
     assert_eq!(manager.commit_history.len(), 0);

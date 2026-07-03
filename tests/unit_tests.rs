@@ -15,7 +15,7 @@ use proptest::prelude::*;
 use std::collections::HashMap;
 use uuid::Uuid;
 
-/// Property-based test for ThreadColor scoring consistency
+// Property-based test for ThreadColor scoring consistency
 proptest! {
     #[test]
     fn prop_thread_color_score_consistency(
@@ -275,7 +275,7 @@ fn test_error_context() {
     }
 }
 
-/// Property-based test for score normalization
+// Property-based test for score normalization
 proptest! {
     #[test]
     fn prop_score_normalization(score in -10.0f64..10.0) {

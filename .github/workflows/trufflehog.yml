@@ -19,7 +19,7 @@ jobs:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
         with:
           fetch-depth: 0
-      - uses: actions/setup-go@0a12ed9e1a4ce4b1a02a5f2dd1e3a9c9e6c7f8b1
+      - uses: actions/setup-go@v5
         with:
           go-version: 'stable'
       - run: go install github.com/trufflehog/trufflehog/v3@latest
