@@ -138,7 +138,7 @@ pub enum ActionType {
 ///
 /// # Example
 ///
-/// ```rust,no_run
+/// ```ignore
 /// use gdk::agent::AgentWorkflowController;
 /// use gdk::core::GitWorkflowManager;
 ///

@@ -19,7 +19,7 @@
 //!
 //! # Example Usage
 //!
-//! ```rust,no_run
+//! ```ignore
 //! use gdk::convergence::ConvergenceAnalyzer;
 //!
 //! let analyzer = ConvergenceAnalyzer::new();

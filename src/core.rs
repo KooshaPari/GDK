@@ -35,6 +35,7 @@ use uuid::Uuid;
 ///
 /// ```rust,no_run
 /// use gdk::core::GitWorkflowManager;
+/// use gdk::GitWorkflow;
 ///
 /// #[tokio::main]
 /// async fn main() -> gdk::GdkResult<()> {
