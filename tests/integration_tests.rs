@@ -285,6 +285,45 @@ async fn test_error_handling() -> GdkResult<()> {
 async fn test_file_thread_creation() -> GdkResult<()> {
     let (_temp_dir, mut manager) = setup_test_repo().await?;
 
+    fs::write(
+        _temp_dir.path().join("src").join("lib.rs"),
+        r#"
+//! Test library for GDK integration tests
+
+/// A simple function to test
+pub fn add(a: i32, b: i32) -> i32 {
+    a + b
+}
+
+/// A simple function added for thread tracking
+pub fn subtract(a: i32, b: i32) -> i32 {
+    a - b
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_add() {
+        assert_eq!(add(2, 3), 5);
+    }
+
+    #[test]
+    fn test_subtract() {
+        assert_eq!(subtract(5, 3), 2);
+    }
+}
+"#,
+    )
+    .map_err(|e| {
+        gdk::GdkError::file_system_error(
+            "src/lib.rs",
+            "Failed to update test file for thread creation",
+            e,
+        )
+    })?;
+
     // Create commit with file changes
     let commit = manager.create_commit_node("Test file threads").await?;
 
