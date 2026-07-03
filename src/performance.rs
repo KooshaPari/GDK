@@ -17,7 +17,7 @@
 use crate::{CommitNode, FileThread, GdkResult, ThreadColor};
 use dashmap::DashMap;
 use once_cell::sync::Lazy;
-use parking_lot::{RwLock, Mutex};
+use parking_lot::{Mutex, RwLock};
 use rayon::prelude::*;
 use smallvec::SmallVec;
 use std::collections::HashMap;
@@ -148,7 +148,7 @@ impl ParallelCommitProcessor {
     pub fn new() -> Self {
         let cpu_count = num_cpus::get();
         let concurrency_limit = (cpu_count * 2).clamp(4, 32);
-        
+
         Self {
             concurrency_limit: Arc::new(Semaphore::new(concurrency_limit)),
             commit_cache: Arc::new(DashMap::with_capacity(1000)),
@@ -182,10 +182,10 @@ impl ParallelCommitProcessor {
         R: Send,
     {
         let start_time = std::time::Instant::now();
-        
+
         // Use optimal chunk size based on system characteristics
         let chunk_size = self.calculate_optimal_chunk_size(commits.len());
-        
+
         // Process chunks in parallel using work-stealing
         let results: Vec<_> = THREAD_POOL.install(|| {
             commits
@@ -198,7 +198,7 @@ impl ParallelCommitProcessor {
                         .map(|(item_idx, commit)| {
                             // Check cache first
                             let _cache_key = format!("{chunk_idx}:{item_idx}");
-                            
+
                             // Process with error handling
                             processor_fn(commit)
                         })
@@ -209,13 +209,11 @@ impl ParallelCommitProcessor {
         });
 
         // Flatten results while preserving order
-        let flattened: GdkResult<Vec<R>> = results
-            .into_iter()
-            .flatten()
-            .collect();
+        let flattened: GdkResult<Vec<R>> = results.into_iter().flatten().collect();
 
         // Update performance metrics
-        self.update_metrics(commits.len(), start_time.elapsed()).await;
+        self.update_metrics(commits.len(), start_time.elapsed())
+            .await;
 
         flattened
     }
@@ -224,7 +222,7 @@ impl ParallelCommitProcessor {
     fn calculate_optimal_chunk_size(&self, total_items: usize) -> usize {
         let cpu_count = num_cpus::get();
         let base_chunk_size = (total_items / (cpu_count * 4)).max(1);
-        
+
         // Adjust based on cache efficiency
         let metrics = self.metrics.read();
         let cache_adjustment = if metrics.cache_hit_ratio > 0.8 {
@@ -232,33 +230,34 @@ impl ParallelCommitProcessor {
         } else {
             0.8 // Smaller chunks for better cache utilization
         };
-        
+
         ((base_chunk_size as f64 * cache_adjustment) as usize).clamp(1, 1000) // Prevent excessive chunk sizes
     }
 
     /// Update performance metrics after processing
     async fn update_metrics(&self, items_processed: usize, duration: std::time::Duration) {
         let mut metrics = self.metrics.write();
-        
+
         let processing_time_us = duration.as_micros() as f64;
         let new_avg = if metrics.commits_processed == 0 {
             processing_time_us / items_processed as f64
         } else {
             // Exponential moving average
             let alpha = 0.1;
-            metrics.avg_commit_time_us * (1.0 - alpha) + 
-                (processing_time_us / items_processed as f64) * alpha
+            metrics.avg_commit_time_us * (1.0 - alpha)
+                + (processing_time_us / items_processed as f64) * alpha
         };
-        
+
         metrics.commits_processed += items_processed as u64;
         metrics.avg_commit_time_us = new_avg;
-        
+
         // Calculate parallel efficiency
         let theoretical_time = metrics.avg_commit_time_us * items_processed as f64;
         let actual_time = processing_time_us;
         let cpu_count = num_cpus::get() as f64;
-        
-        metrics.parallel_efficiency = (theoretical_time / (actual_time * cpu_count)).clamp(0.0, 1.0);
+
+        metrics.parallel_efficiency =
+            (theoretical_time / (actual_time * cpu_count)).clamp(0.0, 1.0);
     }
 
     /// Get current performance metrics
@@ -296,26 +295,23 @@ impl ConcurrentThreadManager {
     /// - Uses concurrent hash maps for thread safety
     /// - Implements adaptive batching based on load
     /// - Provides cache invalidation for consistency
-    pub async fn update_threads_batch(
-        &self,
-        updates: &[ThreadUpdate],
-    ) -> GdkResult<()> {
+    pub async fn update_threads_batch(&self, updates: &[ThreadUpdate]) -> GdkResult<()> {
         let should_flush = {
             let mut batch_processor = self.batch_processor.lock();
-            
+
             // Add updates to batch
             for update in updates {
                 batch_processor.pending_updates.push(update.clone());
-                
+
                 // Invalidate cache for this file
                 self.quality_cache.remove(&update.file_path);
             }
-            
+
             // Check if batch should be flushed
-            batch_processor.pending_updates.len() >= batch_processor.batch_size ||
-               batch_processor.last_flush.elapsed() > std::time::Duration::from_millis(100)
+            batch_processor.pending_updates.len() >= batch_processor.batch_size
+                || batch_processor.last_flush.elapsed() > std::time::Duration::from_millis(100)
         };
-        
+
         // Flush if needed (after releasing the lock)
         if should_flush {
             // Extract updates without holding the lock during async operations
@@ -329,7 +325,7 @@ impl ConcurrentThreadManager {
                     None
                 }
             }; // Lock is dropped here
-            
+
             // Process updates asynchronously without holding any locks
             if let Some(updates) = updates_to_process {
                 // Process updates asynchronously
@@ -338,23 +334,20 @@ impl ConcurrentThreadManager {
                 let _ = updates; // Acknowledge we processed them
             }
         }
-        
+
         Ok(())
     }
 
     /// Flush pending batch updates
     #[allow(dead_code)]
-    async fn flush_batch_updates(
-        &self,
-        batch_processor: &mut BatchProcessor,
-    ) -> GdkResult<()> {
+    async fn flush_batch_updates(&self, batch_processor: &mut BatchProcessor) -> GdkResult<()> {
         if batch_processor.pending_updates.is_empty() {
             return Ok(());
         }
 
         // Process updates in parallel
         let updates = std::mem::take(&mut batch_processor.pending_updates);
-        
+
         // Group updates by file to minimize locking
         let mut grouped_updates: HashMap<String, Vec<ThreadUpdate>> = HashMap::new();
         for update in updates {
@@ -371,20 +364,18 @@ impl ConcurrentThreadManager {
                 let threads = self.threads.clone();
                 async move {
                     // Get or create thread for this file
-                    let thread_ref = threads
-                        .entry(file_path.clone())
-                        .or_insert_with(|| {
-                            Arc::new(RwLock::new(FileThread {
-                                file_path: file_path.clone(),
-                                thread_id: uuid::Uuid::new_v4(),
-                                color_status: ThreadColor::Red,
-                                lint_score: 0.0,
-                                type_check_score: 0.0,
-                                test_coverage: 0.0,
-                                functionality_score: 0.0,
-                                history: Vec::new(),
-                            }))
-                        });
+                    let thread_ref = threads.entry(file_path.clone()).or_insert_with(|| {
+                        Arc::new(RwLock::new(FileThread {
+                            file_path: file_path.clone(),
+                            thread_id: uuid::Uuid::new_v4(),
+                            color_status: ThreadColor::Red,
+                            lint_score: 0.0,
+                            type_check_score: 0.0,
+                            test_coverage: 0.0,
+                            functionality_score: 0.0,
+                            history: Vec::new(),
+                        }))
+                    });
 
                     // Apply latest update (last one wins)
                     if let Some(latest_update) = file_updates.last() {
@@ -393,7 +384,7 @@ impl ConcurrentThreadManager {
                         thread.type_check_score = latest_update.type_check_score;
                         thread.test_coverage = latest_update.test_coverage;
                         thread.functionality_score = latest_update.functionality_score;
-                        
+
                         // Update color based on new scores
                         thread.color_status = ThreadColor::from_scores(
                             latest_update.lint_score,
@@ -408,7 +399,7 @@ impl ConcurrentThreadManager {
 
         // Execute all updates concurrently
         futures::future::join_all(tasks).await;
-        
+
         batch_processor.last_flush = std::time::Instant::now();
         Ok(())
     }
@@ -427,19 +418,22 @@ impl ConcurrentThreadManager {
         if let Some(thread_ref) = self.threads.get(file_path) {
             let thread = thread_ref.read();
             let color = thread.color_status.clone();
-            
+
             // Update cache
             self.quality_cache.insert(
                 file_path.to_string(),
                 QualitySnapshot {
                     color: color.clone(),
-                    score: (thread.lint_score + thread.type_check_score + 
-                           thread.test_coverage + thread.functionality_score) / 4.0,
+                    score: (thread.lint_score
+                        + thread.type_check_score
+                        + thread.test_coverage
+                        + thread.functionality_score)
+                        / 4.0,
                     timestamp: std::time::Instant::now(),
                     data_hash: self.calculate_thread_hash(&thread),
                 },
             );
-            
+
             Some(color)
         } else {
             None
@@ -450,7 +444,7 @@ impl ConcurrentThreadManager {
     fn calculate_thread_hash(&self, thread: &FileThread) -> u64 {
         use std::collections::hash_map::DefaultHasher;
         use std::hash::{Hash, Hasher};
-        
+
         let mut hasher = DefaultHasher::new();
         thread.lint_score.to_bits().hash(&mut hasher);
         thread.type_check_score.to_bits().hash(&mut hasher);
@@ -474,7 +468,7 @@ impl ConcurrentThreadManager {
         // For now, return a reasonable estimate based on cache size
         let cache_size = self.quality_cache.len();
         let thread_count = self.threads.len();
-        
+
         if thread_count == 0 {
             0.0
         } else {
@@ -547,7 +541,7 @@ impl StreamingAnalyzer {
     /// Memory usage: O(window_size), Time: O(1)
     pub fn process_commit_streaming(&mut self, commit: &CommitNode) -> GdkResult<StreamingResult> {
         let quality_score = commit.health_score;
-        
+
         // Update running statistics using Welford's online algorithm
         self.stats_state.sample_count += 1;
         let delta = quality_score - self.stats_state.quality_avg;
@@ -585,12 +579,13 @@ impl StreamingAnalyzer {
 
         let samples = &self.stats_state.recent_samples;
         let mid_point = samples.len() / 2;
-        
+
         let first_half_avg: f64 = samples[..mid_point].iter().sum::<f64>() / mid_point as f64;
-        let second_half_avg: f64 = samples[mid_point..].iter().sum::<f64>() / (samples.len() - mid_point) as f64;
-        
+        let second_half_avg: f64 =
+            samples[mid_point..].iter().sum::<f64>() / (samples.len() - mid_point) as f64;
+
         let diff = second_half_avg - first_half_avg;
-        
+
         if diff > 0.05 {
             TrendDirection::Improving
         } else if diff < -0.05 {

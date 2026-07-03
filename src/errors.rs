@@ -125,9 +125,7 @@ impl GdkError {
         Self::ValidationError {
             rule: rule.into(),
             context: context.into(),
-            source: Box::new(std::io::Error::other(
-                details.into(),
-            )),
+            source: Box::new(std::io::Error::other(details.into())),
         }
     }
 
@@ -213,7 +211,10 @@ impl GdkError {
             }
             Self::FileSystemError { source, .. } => {
                 // IO errors like permission issues might be recoverable
-                matches!(source.kind(), std::io::ErrorKind::PermissionDenied | std::io::ErrorKind::TimedOut)
+                matches!(
+                    source.kind(),
+                    std::io::ErrorKind::PermissionDenied | std::io::ErrorKind::TimedOut
+                )
             }
             Self::ValidationError { .. } => false, // Code issues need fixing
             Self::ConvergenceError { .. } => true, // Can retry convergence
@@ -221,7 +222,7 @@ impl GdkError {
             Self::AgentError { .. } => true,       // Agent ops might succeed
             Self::SerializationError { .. } => false, // Data format issues
             Self::ConfigurationError { .. } => false, // Config needs fixing
-            Self::VisualizationError { .. } => true,  // Visualization might succeed
+            Self::VisualizationError { .. } => true, // Visualization might succeed
         }
     }
 }
@@ -233,10 +234,10 @@ pub type GdkResult<T> = Result<T, GdkError>;
 pub trait GdkResultExt<T> {
     /// Add git operation context
     fn with_git_context(self, operation: &str) -> GdkResult<T>;
-    
+
     /// Add file path context
     fn with_file_context(self, path: &str, operation: &str) -> GdkResult<T>;
-    
+
     /// Add agent context
     fn with_agent_context(self, agent_id: &str, operation: &str) -> GdkResult<T>;
 }
@@ -245,11 +246,11 @@ impl<T> GdkResultExt<T> for Result<T, git2::Error> {
     fn with_git_context(self, operation: &str) -> GdkResult<T> {
         self.map_err(|e| GdkError::git_error(operation, e))
     }
-    
+
     fn with_file_context(self, _path: &str, operation: &str) -> GdkResult<T> {
         self.map_err(|e| GdkError::git_error(operation, e))
     }
-    
+
     fn with_agent_context(self, _agent_id: &str, operation: &str) -> GdkResult<T> {
         self.map_err(|e| GdkError::git_error(operation, e))
     }
@@ -259,11 +260,11 @@ impl<T> GdkResultExt<T> for Result<T, std::io::Error> {
     fn with_git_context(self, operation: &str) -> GdkResult<T> {
         self.map_err(|e| GdkError::file_system_error("unknown", operation, e))
     }
-    
+
     fn with_file_context(self, path: &str, operation: &str) -> GdkResult<T> {
         self.map_err(|e| GdkError::file_system_error(path, operation, e))
     }
-    
+
     fn with_agent_context(self, agent_id: &str, operation: &str) -> GdkResult<T> {
         self.map_err(|e| GdkError::file_system_error(agent_id, operation, e))
     }
@@ -275,9 +276,7 @@ impl From<tokio::task::JoinError> for GdkError {
         GdkError::ValidationError {
             rule: "task_join".to_string(),
             context: "Async task failed to join".to_string(),
-            source: Box::new(std::io::Error::other(
-                err.to_string(),
-            )),
+            source: Box::new(std::io::Error::other(err.to_string())),
         }
     }
 }
@@ -288,9 +287,7 @@ impl From<anyhow::Error> for GdkError {
         GdkError::ValidationError {
             rule: "anyhow_conversion".to_string(),
             context: format!("Converted from anyhow: {err}"),
-            source: Box::new(std::io::Error::other(
-                err.to_string(),
-            )),
+            source: Box::new(std::io::Error::other(err.to_string())),
         }
     }
 }
@@ -322,9 +319,7 @@ impl From<std::time::SystemTimeError> for GdkError {
         GdkError::ValidationError {
             rule: "system_time".to_string(),
             context: "Failed to get system time".to_string(),
-            source: Box::new(std::io::Error::other(
-                err.to_string(),
-            )),
+            source: Box::new(std::io::Error::other(err.to_string())),
         }
     }
 }

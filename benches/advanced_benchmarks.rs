@@ -7,8 +7,8 @@
 //! - Streaming vs batch processing comparison
 //! - Cache effectiveness and hit ratios
 
-use criterion::{black_box, criterion_group, criterion_main, Criterion, BenchmarkId};
-use gdk::performance::{ParallelCommitProcessor, ConcurrentThreadManager, StreamingAnalyzer};
+use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
+use gdk::performance::{ConcurrentThreadManager, ParallelCommitProcessor, StreamingAnalyzer};
 use gdk::{CommitNode, FileThread, ThreadColor};
 use std::collections::HashMap;
 use uuid::Uuid;
@@ -18,7 +18,7 @@ fn generate_test_commits(count: usize) -> Vec<CommitNode> {
     (0..count)
         .map(|i| {
             let mut file_threads = HashMap::new();
-            
+
             // Generate 5-20 files per commit (realistic range)
             let file_count = 5 + (i % 16);
             for j in 0..file_count {
@@ -39,9 +39,9 @@ fn generate_test_commits(count: usize) -> Vec<CommitNode> {
             CommitNode {
                 id: format!("commit-{}", i),
                 hash: format!("abc123def456_{:08x}", i),
-                parent_hashes: if i == 0 { 
-                    Vec::new() 
-                } else { 
+                parent_hashes: if i == 0 {
+                    Vec::new()
+                } else {
                     vec![format!("abc123def456_{:08x}", i - 1)]
                 },
                 message: format!("Commit message {}", i),
@@ -63,11 +63,11 @@ fn generate_test_commits(count: usize) -> Vec<CommitNode> {
 /// Benchmark parallel commit processing at various scales
 fn bench_parallel_processing(c: &mut Criterion) {
     let mut group = c.benchmark_group("parallel_processing");
-    
+
     for size in [100, 500, 1000, 5000, 10000].iter() {
         let commits = generate_test_commits(*size);
         let processor = ParallelCommitProcessor::new();
-        
+
         group.bench_with_input(
             BenchmarkId::new("parallel_commit_analysis", size),
             size,
@@ -81,15 +81,18 @@ fn bench_parallel_processing(c: &mut Criterion) {
                                     .file_threads
                                     .values()
                                     .map(|t| {
-                                        (t.lint_score + t.type_check_score + 
-                                         t.test_coverage + t.functionality_score) / 4.0
+                                        (t.lint_score
+                                            + t.type_check_score
+                                            + t.test_coverage
+                                            + t.functionality_score)
+                                            / 4.0
                                     })
                                     .sum();
-                                
+
                                 Ok(black_box(health_sum / commit.file_threads.len() as f64))
                             })
                             .await;
-                        
+
                         black_box(result)
                     });
             },
@@ -102,7 +105,7 @@ fn bench_parallel_processing(c: &mut Criterion) {
 fn bench_sequential_vs_parallel(c: &mut Criterion) {
     let mut group = c.benchmark_group("sequential_vs_parallel");
     let commits = generate_test_commits(1000);
-    
+
     // Sequential processing
     group.bench_function("sequential_processing", |b| {
         b.iter(|| {
@@ -113,18 +116,21 @@ fn bench_sequential_vs_parallel(c: &mut Criterion) {
                         .file_threads
                         .values()
                         .map(|t| {
-                            (t.lint_score + t.type_check_score + 
-                             t.test_coverage + t.functionality_score) / 4.0
+                            (t.lint_score
+                                + t.type_check_score
+                                + t.test_coverage
+                                + t.functionality_score)
+                                / 4.0
                         })
                         .sum();
                     health_sum / commit.file_threads.len() as f64
                 })
                 .collect();
-            
+
             black_box(results)
         });
     });
-    
+
     // Parallel processing
     let processor = ParallelCommitProcessor::new();
     group.bench_function("parallel_processing", |b| {
@@ -136,19 +142,22 @@ fn bench_sequential_vs_parallel(c: &mut Criterion) {
                             .file_threads
                             .values()
                             .map(|t| {
-                                (t.lint_score + t.type_check_score + 
-                                 t.test_coverage + t.functionality_score) / 4.0
+                                (t.lint_score
+                                    + t.type_check_score
+                                    + t.test_coverage
+                                    + t.functionality_score)
+                                    / 4.0
                             })
                             .sum();
-                        
+
                         Ok(health_sum / commit.file_threads.len() as f64)
                     })
                     .await;
-                
+
                 black_box(result)
             });
     });
-    
+
     group.finish();
 }
 
@@ -156,7 +165,7 @@ fn bench_sequential_vs_parallel(c: &mut Criterion) {
 fn bench_concurrent_thread_management(c: &mut Criterion) {
     let mut group = c.benchmark_group("concurrent_thread_management");
     let manager = ConcurrentThreadManager::new();
-    
+
     // Generate thread updates
     let updates: Vec<_> = (0..1000)
         .map(|i| gdk::performance::ThreadUpdate {
@@ -167,7 +176,7 @@ fn bench_concurrent_thread_management(c: &mut Criterion) {
             functionality_score: 0.85,
         })
         .collect();
-    
+
     group.bench_function("batch_thread_updates", |b| {
         b.to_async(tokio::runtime::Runtime::new().unwrap())
             .iter(|| async {
@@ -175,7 +184,7 @@ fn bench_concurrent_thread_management(c: &mut Criterion) {
                 black_box(result)
             });
     });
-    
+
     // Benchmark cached thread access
     group.bench_function("cached_thread_access", |b| {
         b.iter(|| {
@@ -188,7 +197,7 @@ fn bench_concurrent_thread_management(c: &mut Criterion) {
             black_box(results)
         });
     });
-    
+
     group.finish();
 }
 
@@ -196,53 +205,51 @@ fn bench_concurrent_thread_management(c: &mut Criterion) {
 fn bench_streaming_vs_batch(c: &mut Criterion) {
     let mut group = c.benchmark_group("streaming_vs_batch");
     let commits = generate_test_commits(5000);
-    
+
     // Streaming analysis (constant memory)
     group.bench_function("streaming_analysis", |b| {
         b.iter(|| {
             let mut analyzer = StreamingAnalyzer::new(50);
             let mut results = Vec::new();
-            
+
             for commit in &commits {
                 let result = analyzer.process_commit_streaming(commit).unwrap();
                 results.push(result);
             }
-            
+
             black_box(results)
         });
     });
-    
+
     // Batch analysis (loads all into memory)
     group.bench_function("batch_analysis", |b| {
         b.iter(|| {
             // Simulate batch processing by computing statistics on full dataset
-            let health_scores: Vec<f64> = commits
-                .iter()
-                .map(|c| c.health_score)
-                .collect();
-            
+            let health_scores: Vec<f64> = commits.iter().map(|c| c.health_score).collect();
+
             let avg = health_scores.iter().sum::<f64>() / health_scores.len() as f64;
             let variance = health_scores
                 .iter()
                 .map(|&x| (x - avg).powi(2))
-                .sum::<f64>() / health_scores.len() as f64;
-            
+                .sum::<f64>()
+                / health_scores.len() as f64;
+
             black_box((avg, variance))
         });
     });
-    
+
     group.finish();
 }
 
 /// Benchmark memory usage patterns
 fn bench_memory_patterns(c: &mut Criterion) {
     let mut group = c.benchmark_group("memory_patterns");
-    
+
     // Small vector optimization benchmark
     group.bench_function("smallvec_optimization", |b| {
         b.iter(|| {
             let mut results = Vec::new();
-            
+
             for i in 0..1000 {
                 // SmallVec for small collections (on stack)
                 let mut small_vec: smallvec::SmallVec<[u32; 8]> = smallvec::SmallVec::new();
@@ -251,16 +258,16 @@ fn bench_memory_patterns(c: &mut Criterion) {
                 }
                 results.push(small_vec.len());
             }
-            
+
             black_box(results)
         });
     });
-    
+
     // Regular Vec benchmark for comparison
     group.bench_function("regular_vec", |b| {
         b.iter(|| {
             let mut results = Vec::new();
-            
+
             for i in 0..1000 {
                 let mut vec = Vec::new();
                 for j in 0..5 {
@@ -268,11 +275,11 @@ fn bench_memory_patterns(c: &mut Criterion) {
                 }
                 results.push(vec.len());
             }
-            
+
             black_box(results)
         });
     });
-    
+
     group.finish();
 }
 
@@ -281,35 +288,31 @@ fn bench_cache_effectiveness(c: &mut Criterion) {
     let mut group = c.benchmark_group("cache_effectiveness");
     let processor = ParallelCommitProcessor::new();
     let commits = generate_test_commits(1000);
-    
+
     // Cold cache performance
     group.bench_function("cold_cache", |b| {
         b.to_async(tokio::runtime::Runtime::new().unwrap())
             .iter(|| async {
                 processor.reset(); // Clear cache
                 let result = processor
-                    .process_commits_parallel(&commits[..100], |commit| {
-                        Ok(commit.health_score)
-                    })
+                    .process_commits_parallel(&commits[..100], |commit| Ok(commit.health_score))
                     .await;
                 black_box(result)
             });
     });
-    
+
     // Warm cache performance (process same commits multiple times)
     group.bench_function("warm_cache", |b| {
         b.to_async(tokio::runtime::Runtime::new().unwrap())
             .iter(|| async {
                 // Don't reset cache - simulate repeated access patterns
                 let result = processor
-                    .process_commits_parallel(&commits[..100], |commit| {
-                        Ok(commit.health_score)
-                    })
+                    .process_commits_parallel(&commits[..100], |commit| Ok(commit.health_score))
                     .await;
                 black_box(result)
             });
     });
-    
+
     group.finish();
 }
 
@@ -317,7 +320,7 @@ fn bench_cache_effectiveness(c: &mut Criterion) {
 fn bench_serialization_performance(c: &mut Criterion) {
     let mut group = c.benchmark_group("serialization");
     let commits = generate_test_commits(100);
-    
+
     // Standard serde_json
     group.bench_function("serde_json", |b| {
         b.iter(|| {
@@ -326,7 +329,7 @@ fn bench_serialization_performance(c: &mut Criterion) {
             black_box(json.len())
         });
     });
-    
+
     // SIMD JSON (if available)
     #[cfg(feature = "simd")]
     group.bench_function("simd_json", |b| {
@@ -337,7 +340,7 @@ fn bench_serialization_performance(c: &mut Criterion) {
             black_box(parsed.len())
         });
     });
-    
+
     group.finish();
 }
 
@@ -345,7 +348,7 @@ fn bench_serialization_performance(c: &mut Criterion) {
 fn bench_concurrent_access(c: &mut Criterion) {
     let mut group = c.benchmark_group("concurrent_access");
     let manager = ConcurrentThreadManager::new();
-    
+
     // Simulate multiple agents accessing threads concurrently
     group.bench_function("multi_agent_access", |b| {
         b.to_async(tokio::runtime::Runtime::new().unwrap())
@@ -362,12 +365,12 @@ fn bench_concurrent_access(c: &mut Criterion) {
                         results
                     }
                 });
-                
+
                 let all_results = futures::future::join_all(tasks).await;
                 black_box(all_results.len())
             });
     });
-    
+
     group.finish();
 }
 

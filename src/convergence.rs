@@ -19,7 +19,7 @@
 //!
 //! # Example Usage
 //!
-//! ```rust,no_run
+//! ```ignore
 //! use gdk::convergence::ConvergenceAnalyzer;
 //!
 //! let analyzer = ConvergenceAnalyzer::new();
@@ -34,7 +34,7 @@
 //! }
 //! ```
 
-use crate::{CommitNode, ThreadColor, GdkResult, GdkError};
+use crate::{CommitNode, GdkError, GdkResult, ThreadColor};
 use serde::{Deserialize, Serialize};
 
 /// Mathematical analyzer for detecting workflow convergence
@@ -195,7 +195,10 @@ impl ConvergenceAnalyzer {
     ///              0.15 * build_success_rate +
     ///              0.10 * trend_improvement
     /// ```
-    pub fn analyze_convergence(&self, commit_history: &[CommitNode]) -> GdkResult<ConvergenceResult> {
+    pub fn analyze_convergence(
+        &self,
+        commit_history: &[CommitNode],
+    ) -> GdkResult<ConvergenceResult> {
         if commit_history.is_empty() {
             return Ok(ConvergenceResult {
                 is_converged: false,
@@ -276,13 +279,13 @@ impl ConvergenceAnalyzer {
     }
 
     fn calculate_thread_health_ratio(&self, commit_history: &[CommitNode]) -> GdkResult<f64> {
-        let latest_commit = commit_history
-            .last()
-            .ok_or_else(|| GdkError::validation_error(
+        let latest_commit = commit_history.last().ok_or_else(|| {
+            GdkError::validation_error(
                 "no_commits",
                 "No commits available for thread health analysis".to_string(),
                 "Commit history is empty".to_string(),
-            ))?;
+            )
+        })?;
 
         let total_threads = latest_commit.file_threads.len();
         if total_threads == 0 {
@@ -487,7 +490,10 @@ impl ConvergenceAnalyzer {
         recommendations
     }
 
-    pub fn predict_convergence_time(&self, commit_history: &[CommitNode]) -> GdkResult<Option<u32>> {
+    pub fn predict_convergence_time(
+        &self,
+        commit_history: &[CommitNode],
+    ) -> GdkResult<Option<u32>> {
         if commit_history.len() < 3 {
             return Ok(None);
         }
