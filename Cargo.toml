@@ -52,6 +52,9 @@ proptest = "1.4"
 criterion = { version = "0.8", features = ["html_reports"] }
 pprof = { version = "0.15", features = ["criterion", "protobuf"] }  # Profiling support
 
+[package.metadata.cargo-machete]
+ignored = ["bytes", "hashbrown", "hex", "memchr", "sha2", "tokio-util"]
+
 [dependencies.clap]
 version = "4.0"
 features = ["derive"]
