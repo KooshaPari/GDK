@@ -1,3 +1,13 @@
+> :warning: **STRICT PAUSE — DO NOT UNPAUSE**
+>
+> This repository is **archived** and **frozen**.
+> - No new commits, no PRs, no issues, no agent work.
+> - No releases, no publishes, no dependents added.
+> - Forks are fine; do **not** open them upstream.
+>
+> Archival policy: https://github.com/KooshaPari/phenotype-governance
+> Owner sign-off required to unpause. See README below for last-known state.
+
 > **Pinned references (Phenotype-org)**
 > - MSRV: see rust-toolchain.toml
 > - cargo-deny config: see deny.toml
